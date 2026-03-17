@@ -19,7 +19,7 @@ export async function authenticate(
   context: BrowserContext
 ): Promise<void> {
   const authMode = process.env.AUTH_MODE || 'interactive';
-  const baseUrl = process.env.POWERAPPS_URL || 'https://make.powerapps.com';
+  const baseUrl = process.env.D365_BASE_URL || process.env.POWERAPPS_URL || 'https://make.powerapps.com';
 
   if (authMode === 'storageState' && fs.existsSync(STORAGE_STATE_PATH)) {
     // Try loading saved state — navigate and check if we land authenticated

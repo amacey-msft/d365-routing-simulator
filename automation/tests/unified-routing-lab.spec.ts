@@ -22,15 +22,13 @@ test.describe.serial('Unified Routing & Agent Configuration Lab', () => {
     await context.close();
   });
 
-  // ─── STEP 001: Navigate to Customer Service admin center ───
-  test('Step 001 — Open Customer Service admin center', async () => {
-    const adminUrl = env.d365BaseUrl
-      ? `${env.d365BaseUrl}/main.aspx?app=customerserviceadmincenter`
-      : `${env.powerappsUrl}/environments/${env.environmentId}`;
-    await page.goto(adminUrl, { waitUntil: 'domcontentloaded' });
+  // ─── STEP 001: Navigate to Copilot Service admin center ───
+  test('Step 001 — Open Copilot Service admin center', async () => {
+    await page.goto(env.d365AdminAppUrl || env.d365BaseUrl, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
-    await captureStep(page, 1, 'open-cs-admin-center', {
-      description: 'Customer Service admin center landing page',
+    await page.waitForTimeout(5000);
+    await captureStep(page, 1, 'open-copilot-service-admin', {
+      description: 'Copilot Service admin center landing page',
     });
   });
 

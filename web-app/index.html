@@ -3,329 +3,1105 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>D365 Unified Routing Simulator</title>
+  <title>D365 Contact Center — Routing Simulator</title>
   <style>
     :root {
-      --bg: #f5f6fa;
-      --card: #ffffff;
-      --primary: #0078d4;
-      --success: #107c10;
-      --warning: #ff8c00;
-      --danger: #d13438;
-      --text: #1b1b1b;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --radius: 10px;
+      --bg: #f5f6fa; --card: #ffffff; --primary: #0078d4; --primary-light: #e6f2ff;
+      --success: #107c10; --success-light: #e6ffe6; --warning: #ff8c00; --warning-light: #fff8e6;
+      --danger: #d13438; --danger-light: #fde7e7; --text: #1b1b1b; --muted: #6b7280;
+      --border: #e5e7eb; --radius: 10px; --purple: #5c2d91; --purple-light: #f3e5f5;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
-    header { background: var(--primary); color: #fff; padding: 1.5rem 0; margin-bottom: 2rem; }
-    header h1 { font-size: 1.5rem; font-weight: 600; }
-    header p { opacity: 0.85; margin-top: 0.25rem; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+    header { background: linear-gradient(135deg, #0078d4, #005a9e); color: #fff; padding: 1.25rem 0; margin-bottom: 1.5rem; }
+    header h1 { font-size: 1.4rem; font-weight: 600; }
+    header p { opacity: 0.85; margin-top: 0.2rem; font-size: 0.9rem; }
+    header .subtitle { display: flex; gap: 1.5rem; margin-top: 0.5rem; font-size: 0.75rem; opacity: 0.7; }
+    header .subtitle a { color: #fff; text-decoration: underline; }
 
-    .pipeline { display: flex; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
-    .pipeline-stage {
-      flex: 1; min-width: 140px; padding: 0.75rem 1rem;
-      border-radius: var(--radius); text-align: center; font-size: 0.85rem;
-      font-weight: 600; border: 2px solid var(--border); background: var(--card);
-      transition: all 0.3s;
-    }
-    .pipeline-stage.active { border-color: var(--primary); background: #e6f2ff; }
-    .pipeline-stage.passed { border-color: var(--success); background: #e6ffe6; }
-    .pipeline-stage .arrow { display: block; color: var(--muted); font-size: 1.2rem; margin-top: 0.25rem; }
+    /* Tabs */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 1.5rem; }
+    .tab { padding: 0.6rem 1.2rem; cursor: pointer; font-size: 0.85rem; font-weight: 600;
+      border: 2px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0;
+      background: transparent; color: var(--muted); transition: all 0.2s; position: relative; bottom: -2px; }
+    .tab:hover { color: var(--primary); }
+    .tab.active { color: var(--primary); background: var(--card); border-color: var(--border); border-bottom-color: var(--card); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+    /* Pipeline */
+    .pipeline { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .pipeline-stage { flex: 1; min-width: 110px; padding: 0.6rem 0.75rem; border-radius: var(--radius);
+      text-align: center; font-size: 0.78rem; font-weight: 600; border: 2px solid var(--border);
+      background: var(--card); transition: all 0.3s; }
+    .pipeline-stage.active { border-color: var(--primary); background: var(--primary-light); }
+    .pipeline-stage.passed { border-color: var(--success); background: var(--success-light); }
+    .pipeline-stage.skipped { border-color: var(--muted); background: #f3f4f6; opacity: 0.5; }
+    .pipeline-stage .arrow { display: block; color: var(--muted); font-size: 1rem; margin-top: 0.15rem; }
+    .pipeline-stage .sub { font-size: 0.65rem; font-weight: 400; color: var(--muted); display: block; }
 
-    .card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-    .card h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary); }
-    .card h3 { font-size: 0.95rem; margin: 1rem 0 0.5rem; }
+    /* Layout */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem; }
+    @media (max-width: 900px) { .grid, .grid-3 { grid-template-columns: 1fr; } }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .card h2 { font-size: 1rem; margin-bottom: 0.75rem; color: var(--primary); }
+    .card h3 { font-size: 0.88rem; margin: 0.75rem 0 0.35rem; }
+    .section-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--muted); font-weight: 700; margin-bottom: 0.5rem; }
 
-    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; }
-    select, input[type="range"] { width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
+    /* Form elements */
+    label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem; }
+    select, input[type="text"], input[type="number"] { width: 100%; padding: 0.4rem 0.5rem;
+      border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; }
     select { background: #fff; cursor: pointer; }
-
-    .toggle-group { display: flex; gap: 0.5rem; margin: 0.5rem 0; flex-wrap: wrap; }
-    .toggle-btn {
-      padding: 0.4rem 0.85rem; border: 1px solid var(--border); border-radius: 20px;
-      cursor: pointer; font-size: 0.8rem; background: var(--card); transition: all 0.2s;
-    }
+    input[type="range"] { width: 100%; }
+    .toggle-group { display: flex; gap: 0.4rem; margin: 0.35rem 0; flex-wrap: wrap; }
+    .toggle-btn { padding: 0.3rem 0.7rem; border: 1px solid var(--border); border-radius: 20px;
+      cursor: pointer; font-size: 0.75rem; background: var(--card); transition: all 0.2s; user-select: none; }
     .toggle-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
     .toggle-btn:hover { border-color: var(--primary); }
+    .switch { display: flex; align-items: center; gap: 0.5rem; margin: 0.35rem 0; }
+    .switch input[type="checkbox"] { width: 36px; height: 20px; appearance: none; background: #ccc;
+      border-radius: 10px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+    .switch input[type="checkbox"]:checked { background: var(--primary); }
+    .switch input[type="checkbox"]::after { content: ''; position: absolute; width: 16px; height: 16px;
+      background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: left 0.2s; }
+    .switch input[type="checkbox"]:checked::after { left: 18px; }
+    .switch label { margin-bottom: 0; font-size: 0.8rem; }
+    .capacity-bar { height: 6px; background: #e5e7eb; border-radius: 4px; margin-top: 0.4rem; overflow: hidden; }
+    .capacity-bar .fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
 
-    .capacity-bar {
-      height: 8px; background: #e5e7eb; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;
-    }
-    .capacity-bar .fill {
-      height: 100%; border-radius: 4px; transition: width 0.5s;
-    }
-
-    .result-panel {
-      background: #f0f7ff; border: 2px solid var(--primary); border-radius: var(--radius);
-      padding: 1.5rem; margin-top: 1.5rem;
-    }
-    .result-panel h2 { color: var(--primary); }
-    .result-panel .step { padding: 0.5rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 0.75rem; }
-    .result-panel .step:last-child { border-bottom: none; }
-    .result-panel .step-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem; }
-    .result-panel .step-text { font-size: 0.9rem; }
-    .result-panel .step-label { font-weight: 600; }
-
-    .btn {
-      display: inline-block; padding: 0.6rem 1.5rem; border: none; border-radius: 6px;
-      font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
-      color: #fff; background: var(--primary); margin-top: 1rem;
-    }
-    .btn:hover { opacity: 0.85; }
-    .btn.reset { background: var(--muted); }
-
-    .tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    /* Tags */
+    .tag { display: inline-block; padding: 0.12rem 0.45rem; border-radius: 12px; font-size: 0.72rem; font-weight: 600; }
     .tag.skill { background: #fff3e0; color: #e65100; }
     .tag.queue { background: #e8f5e9; color: #2e7d32; }
-    .tag.agent { background: #f3e5f5; color: #6a1b9a; }
+    .tag.agent { background: var(--purple-light); color: var(--purple); }
+    .tag.channel { background: #e3f2fd; color: #1565c0; }
+    .tag.sentiment { background: #fce4ec; color: #c62828; }
+    .tag.preferred { background: #e8eaf6; color: #283593; }
+    .tag.shift { background: #e0f2f1; color: #00695c; }
+    .tag.capacity { background: #f3e5f5; color: #6a1b9a; }
+    .tag.record { background: #fff9c4; color: #f57f17; }
+    .tag.info { background: #e3f2fd; color: #1565c0; }
 
-    footer { text-align: center; padding: 2rem 0; color: var(--muted); font-size: 0.8rem; }
+    /* Result panel */
+    .result-panel { background: #f8fbff; border: 2px solid var(--primary); border-radius: var(--radius); padding: 1.25rem; margin-top: 1rem; }
+    .result-panel h2 { color: var(--primary); font-size: 1rem; margin-bottom: 0.75rem; }
+    .result-panel .step { padding: 0.4rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 0.6rem; }
+    .result-panel .step:last-child { border-bottom: none; }
+    .result-panel .step-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.1rem; }
+    .result-panel .step-text { font-size: 0.82rem; }
+    .result-panel .step-label { font-weight: 600; }
+
+    /* Buttons */
+    .btn { display: inline-block; padding: 0.5rem 1.25rem; border: none; border-radius: 6px;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+      color: #fff; background: var(--primary); margin-top: 0.75rem; margin-right: 0.5rem; }
+    .btn:hover { opacity: 0.85; }
+    .btn.reset { background: var(--muted); }
+    .btn.sm { padding: 0.35rem 0.85rem; font-size: 0.78rem; margin-top: 0.5rem; }
+
+    /* Info box */
+    .info-box { background: #f0f7ff; border-left: 3px solid var(--primary); padding: 0.6rem 0.8rem;
+      font-size: 0.78rem; border-radius: 0 6px 6px 0; margin: 0.5rem 0; color: #1a1a1a; }
+    .info-box strong { color: var(--primary); }
+
+    /* Rep cards */
+    .rep-card { border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem; margin: 0.35rem 0;
+      display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem; }
+    .rep-card .avatar { width: 28px; height: 28px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; color: #fff; flex-shrink: 0; }
+    .rep-card .details { flex: 1; }
+    .rep-card .name { font-weight: 600; }
+    .rep-card .meta { font-size: 0.72rem; color: var(--muted); }
+    .rep-card.selected { border-color: var(--success); background: var(--success-light); }
+    .rep-card.unavailable { opacity: 0.5; }
+
+    /* Feature grid */
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; margin: 0.75rem 0; }
+    .feature-card { border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem;
+      background: var(--card); transition: border-color 0.2s; }
+    .feature-card:hover { border-color: var(--primary); }
+    .feature-card h4 { font-size: 0.85rem; color: var(--primary); margin-bottom: 0.25rem; }
+    .feature-card p { font-size: 0.75rem; color: var(--muted); }
+    .feature-card .doc-link { font-size: 0.7rem; color: var(--primary); text-decoration: none; margin-top: 0.35rem; display: inline-block; }
+    .feature-card .doc-link:hover { text-decoration: underline; }
+
+    footer { text-align: center; padding: 1.5rem 0; color: var(--muted); font-size: 0.75rem; }
+    footer a { color: var(--primary); text-decoration: none; }
+
+    /* Connection banner */
+    .connect-banner { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1rem 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .connect-banner .banner-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .connect-banner input[type="text"] { flex: 1; min-width: 240px; }
+    .connect-banner .btn { margin-top: 0; }
+    .connect-banner .status { font-size: 0.78rem; margin-top: 0.5rem; }
+    .connect-banner .status.ok { color: var(--success); }
+    .connect-banner .status.err { color: var(--danger); }
+    .connect-banner .status.loading { color: var(--primary); }
+    .connect-banner .auth-tabs { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .connect-banner .auth-tab { padding: 0.3rem 0.8rem; border: 1px solid var(--border); border-radius: 6px;
+      cursor: pointer; font-size: 0.78rem; font-weight: 600; background: var(--card); }
+    .connect-banner .auth-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .connect-banner .auth-panel { display: none; }
+    .connect-banner .auth-panel.active { display: block; }
+    .connect-banner textarea { width: 100%; height: 60px; font-family: monospace; font-size: 0.75rem;
+      border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem; resize: vertical; }
+    .connect-banner .live-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 12px;
+      font-size: 0.7rem; font-weight: 700; background: var(--success-light); color: var(--success); }
+    .connect-banner .summary { font-size: 0.78rem; color: var(--muted); margin-top: 0.5rem; }
+    .connect-banner .summary span { font-weight: 600; color: var(--text); }
   </style>
 </head>
 <body>
 
 <header>
   <div class="container">
-    <h1>D365 Unified Routing Simulator</h1>
-    <p>Visualize how Dynamics 365 Contact Center routes work items through the pipeline</p>
+    <h1>D365 Contact Center — Routing Simulator</h1>
+    <p>Interactive visualization of all routing options in Dynamics 365 Contact Center</p>
+    <div class="subtitle">
+      <span>Based on official Microsoft Learn documentation</span>
+      <a href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/overview-unified-routing" target="_blank" rel="noopener">Unified Routing Docs</a>
+    </div>
   </div>
 </header>
 
 <div class="container">
 
-  <!-- Pipeline visualization -->
-  <div class="pipeline" id="pipeline">
-    <div class="pipeline-stage" id="stage-channel" data-stage="channel">Channel<span class="arrow">→</span></div>
-    <div class="pipeline-stage" id="stage-workstream" data-stage="workstream">Workstream<span class="arrow">→</span></div>
-    <div class="pipeline-stage" id="stage-classification" data-stage="classification">Classification<span class="arrow">→</span></div>
-    <div class="pipeline-stage" id="stage-routing" data-stage="routing">Route-to-Queue<span class="arrow">→</span></div>
-    <div class="pipeline-stage" id="stage-assignment" data-stage="assignment">Assignment<span class="arrow">→</span></div>
-    <div class="pipeline-stage" id="stage-workspace" data-stage="workspace">Agent Workspace</div>
-  </div>
-
-  <div class="grid">
-    <!-- Input controls -->
-    <div class="card">
-      <h2>Simulate Customer Input</h2>
-
-      <label for="channel">Channel</label>
-      <select id="channel">
-        <option value="chat" selected>Chat (Live Chat Widget)</option>
-        <option value="email">Email</option>
-        <option value="voice">Voice</option>
-      </select>
-
-      <h3>Pre-chat Survey: Issue Category</h3>
-      <div class="toggle-group" id="issue-category-group">
-        <div class="toggle-btn" data-value="Billing">Billing</div>
-        <div class="toggle-btn" data-value="Hardware">Hardware</div>
-        <div class="toggle-btn" data-value="Software">Software</div>
-        <div class="toggle-btn" data-value="General">General</div>
-      </div>
-
-      <h3>Skills in System</h3>
-      <div class="toggle-group" id="skills-group">
-        <div class="toggle-btn active" data-value="Billing">Billing</div>
-        <div class="toggle-btn active" data-value="Hardware">Hardware</div>
-        <div class="toggle-btn" data-value="Software">Software</div>
-      </div>
-
-      <h3>Agent Capacity</h3>
-      <label for="capacity-slider">Available capacity: <span id="capacity-value">3</span> / 5</label>
-      <input type="range" id="capacity-slider" min="0" max="5" value="3">
-      <div class="capacity-bar"><div class="fill" id="capacity-fill" style="width:60%;background:var(--success);"></div></div>
-
-      <h3>Queue Configuration</h3>
-      <div class="toggle-group" id="queues-group">
-        <div class="toggle-btn active" data-value="Billing Queue">Billing Queue</div>
-        <div class="toggle-btn active" data-value="Hardware Queue">Hardware Queue</div>
-        <div class="toggle-btn active" data-value="Default Queue">Default Queue</div>
-      </div>
-
-      <button class="btn" id="simulate-btn">Simulate Routing</button>
-      <button class="btn reset" id="reset-btn">Reset</button>
+  <!-- Connection banner -->
+  <div class="connect-banner" id="connect-banner">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+      <h2 style="font-size:0.95rem;color:var(--primary);margin:0;">Connect to D365 Environment</h2>
+      <span id="live-badge" class="live-badge" style="display:none;">LIVE DATA</span>
     </div>
-
-    <!-- Result panel -->
-    <div class="card">
-      <h2>Routing Decision Trace</h2>
-      <div id="result-container">
-        <p style="color:var(--muted);font-style:italic;">Select an Issue Category and click "Simulate Routing" to see the decision trace.</p>
+    <div class="auth-tabs">
+      <div class="auth-tab active" data-auth="token">Bearer Token</div>
+      <div class="auth-tab" data-auth="msal">MSAL Login</div>
+    </div>
+    <div class="auth-panel active" id="auth-token">
+      <div class="banner-row">
+        <input type="text" id="org-url" placeholder="https://org7ef5c70f.crm.dynamics.com" style="max-width:340px;">
+        <textarea id="bearer-token" placeholder="Paste bearer token here (copy from browser dev tools on your D365 org — Network tab → any API call → Authorization header)"></textarea>
+        <button class="btn" id="connect-token-btn">Connect</button>
       </div>
     </div>
+    <div class="auth-panel" id="auth-msal">
+      <div class="banner-row">
+        <input type="text" id="org-url-msal" placeholder="https://org7ef5c70f.crm.dynamics.com" style="max-width:340px;">
+        <input type="text" id="msal-client-id" placeholder="Entra App Client ID (optional)" style="max-width:280px;">
+        <button class="btn" id="connect-msal-btn">Sign In</button>
+      </div>
+    </div>
+    <div class="status" id="connect-status"></div>
+    <div class="summary" id="connect-summary" style="display:none;"></div>
   </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" data-tab="simulator">Routing Simulator</div>
+    <div class="tab" data-tab="features">Routing Features Reference</div>
+    <div class="tab" data-tab="assignment">Assignment Methods</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 1: SIMULATOR -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-panel active" id="panel-simulator">
+
+    <!-- Pipeline -->
+    <div class="pipeline" id="pipeline">
+      <div class="pipeline-stage" id="stage-channel">Channel<span class="sub">Chat / Voice / Record</span><span class="arrow">→</span></div>
+      <div class="pipeline-stage" id="stage-workstream">Workstream<span class="sub">Intake rules</span><span class="arrow">→</span></div>
+      <div class="pipeline-stage" id="stage-preferred">Preferred Rep<span class="sub">Optional check</span><span class="arrow">→</span></div>
+      <div class="pipeline-stage" id="stage-classification">Classification<span class="sub">Rules / ML / Sentiment</span><span class="arrow">→</span></div>
+      <div class="pipeline-stage" id="stage-routing">Route-to-Queue<span class="sub">Skill / Capacity match</span><span class="arrow">→</span></div>
+      <div class="pipeline-stage" id="stage-assignment">Assignment<span class="sub">Round Robin / Capacity</span><span class="arrow">→</span></div>
+      <div class="pipeline-stage" id="stage-workspace">Workspace<span class="sub">Rep receives item</span></div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT: Controls -->
+      <div>
+        <!-- Work item source -->
+        <div class="card" style="margin-bottom:1rem;">
+          <h2>Work Item Source</h2>
+
+          <label for="channel">Channel / Record type</label>
+          <select id="channel">
+            <optgroup label="Messaging channels">
+              <option value="chat" selected>Live Chat</option>
+              <option value="sms">SMS</option>
+              <option value="teams">Microsoft Teams</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="facebook">Facebook Messenger</option>
+            </optgroup>
+            <optgroup label="Voice">
+              <option value="voice">Voice (Phone Call)</option>
+            </optgroup>
+            <optgroup label="Record routing">
+              <option value="case">Case (record routing)</option>
+              <option value="email">Email (record routing)</option>
+            </optgroup>
+          </select>
+
+          <h3>Work item context</h3>
+          <label for="issue-category">Issue Category (context variable)</label>
+          <div class="toggle-group" id="issue-category-group">
+            <div class="toggle-btn" data-value="Billing">Billing</div>
+            <div class="toggle-btn" data-value="Hardware">Hardware</div>
+            <div class="toggle-btn" data-value="Software">Software</div>
+            <div class="toggle-btn" data-value="Returns">Returns</div>
+            <div class="toggle-btn" data-value="General">General</div>
+          </div>
+
+          <label for="case-priority" style="margin-top:0.5rem;">Case Priority</label>
+          <select id="case-priority">
+            <option value="high">High</option>
+            <option value="normal" selected>Normal</option>
+            <option value="low">Low</option>
+          </select>
+
+          <label for="customer-sentiment" style="margin-top:0.5rem;">Customer Sentiment</label>
+          <select id="customer-sentiment">
+            <option value="very-positive">Very positive</option>
+            <option value="positive">Positive</option>
+            <option value="slightly-positive">Slightly positive</option>
+            <option value="neutral" selected>Neutral</option>
+            <option value="slightly-negative">Slightly negative</option>
+            <option value="negative">Negative</option>
+            <option value="very-negative">Very negative</option>
+          </select>
+        </div>
+
+        <!-- Routing configuration -->
+        <div class="card" style="margin-bottom:1rem;">
+          <h2>Routing Configuration</h2>
+
+          <div class="section-label">General Routing (Routing page)</div>
+
+          <div class="switch">
+            <input type="checkbox" id="preferred-rep-enabled">
+            <label for="preferred-rep-enabled">Preferred representative routing</label>
+          </div>
+          <div id="preferred-rep-options" style="display:none; margin-left:1.5rem;">
+            <label for="preferred-rep-fallback">If preferred rep unavailable:</label>
+            <select id="preferred-rep-fallback" style="max-width:300px;">
+              <option value="assignment-logic">Next best rep (assignment logic)</option>
+              <option value="unassigned">Leave unassigned in queue</option>
+            </select>
+          </div>
+
+          <div class="switch">
+            <input type="checkbox" id="skill-routing-enabled" checked>
+            <label for="skill-routing-enabled">Skill-based routing</label>
+          </div>
+          <div id="skill-routing-options" style="margin-left:1.5rem;">
+            <label for="skill-match-algo">Skill matching algorithm:</label>
+            <select id="skill-match-algo" style="max-width:200px;">
+              <option value="exact">Exact Match</option>
+              <option value="closest">Closest Match</option>
+            </select>
+          </div>
+
+          <div class="switch">
+            <input type="checkbox" id="shift-routing-enabled">
+            <label for="shift-routing-enabled">Shift-based routing</label>
+          </div>
+
+          <div class="section-label" style="margin-top:0.75rem;">Intelligent Classification</div>
+
+          <div class="switch">
+            <input type="checkbox" id="isf-enabled">
+            <label for="isf-enabled">Intelligent skill finder (ML model)</label>
+          </div>
+
+          <div class="switch">
+            <input type="checkbox" id="sentiment-enabled">
+            <label for="sentiment-enabled">Sentiment prediction (preview)</label>
+          </div>
+
+          <div class="section-label" style="margin-top:0.75rem;">Classification Rules</div>
+          <label for="classification-type">Classification rule type:</label>
+          <select id="classification-type">
+            <option value="logical" selected>Logical rules (manual)</option>
+            <option value="ml-skill">ML-based (intelligent skill finder)</option>
+            <option value="capacity-profile">Capacity profile-based</option>
+          </select>
+        </div>
+
+        <!-- System setup -->
+        <div class="card" style="margin-bottom:1rem;">
+          <h2>System Setup</h2>
+
+          <h3>Skills defined in system</h3>
+          <div class="toggle-group" id="skills-group">
+            <div class="toggle-btn active" data-value="Billing">Billing</div>
+            <div class="toggle-btn active" data-value="Hardware">Hardware</div>
+            <div class="toggle-btn active" data-value="Software">Software</div>
+            <div class="toggle-btn" data-value="Returns">Returns</div>
+            <div class="toggle-btn" data-value="Spanish">Spanish</div>
+            <div class="toggle-btn" data-value="VIP">VIP</div>
+          </div>
+
+          <h3>Queues</h3>
+          <div class="toggle-group" id="queues-group">
+            <div class="toggle-btn active" data-value="Billing Queue">Billing Queue</div>
+            <div class="toggle-btn active" data-value="Hardware Queue">Hardware Queue</div>
+            <div class="toggle-btn active" data-value="Software Queue">Software Queue</div>
+            <div class="toggle-btn active" data-value="VIP Queue">VIP Queue</div>
+            <div class="toggle-btn active" data-value="Default Queue">Default Queue</div>
+          </div>
+
+          <h3>Assignment method (on queue)</h3>
+          <select id="assignment-method">
+            <option value="round-robin" selected>Advanced Round Robin</option>
+            <option value="highest-capacity">Highest Capacity</option>
+            <option value="least-active">Least Active (voice/messaging)</option>
+            <option value="custom">Custom Assignment</option>
+          </select>
+
+          <h3>Capacity</h3>
+          <label>Available capacity: <span id="capacity-value">3</span> / 5</label>
+          <input type="range" id="capacity-slider" min="0" max="5" value="3">
+          <div class="capacity-bar"><div class="fill" id="capacity-fill" style="width:60%;background:var(--success);"></div></div>
+        </div>
+
+        <!-- Representative roster -->
+        <div class="card">
+          <h2>Representatives</h2>
+          <div id="rep-roster">
+            <div class="rep-card" data-rep="ana" data-skills="Billing,Software" data-capacity="3" data-shift="on" data-preferred="true">
+              <div class="avatar" style="background:#0078d4">AB</div>
+              <div class="details">
+                <div class="name">Ana Bowman</div>
+                <div class="meta">Skills: Billing, Software | Capacity: 3/5 | On shift | Preferred for contact</div>
+              </div>
+            </div>
+            <div class="rep-card" data-rep="carlos" data-skills="Hardware,Returns" data-capacity="4" data-shift="on" data-preferred="false">
+              <div class="avatar" style="background:#107c10">CG</div>
+              <div class="details">
+                <div class="name">Carlos Garcia</div>
+                <div class="meta">Skills: Hardware, Returns | Capacity: 4/5 | On shift</div>
+              </div>
+            </div>
+            <div class="rep-card" data-rep="diana" data-skills="Billing,Hardware,VIP,Spanish" data-capacity="1" data-shift="on" data-preferred="false">
+              <div class="avatar" style="background:#5c2d91">DK</div>
+              <div class="details">
+                <div class="name">Diana Kim</div>
+                <div class="meta">Skills: Billing, Hardware, VIP, Spanish | Capacity: 1/5 | On shift</div>
+              </div>
+            </div>
+            <div class="rep-card" data-rep="eric" data-skills="Billing,Software,Returns" data-capacity="5" data-shift="off" data-preferred="false">
+              <div class="avatar" style="background:#ff8c00">EW</div>
+              <div class="details">
+                <div class="name">Eric Wang</div>
+                <div class="meta">Skills: Billing, Software, Returns | Capacity: 5/5 | Off shift</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn" id="simulate-btn">Simulate Routing</button>
+        <button class="btn reset" id="reset-btn">Reset</button>
+      </div>
+
+      <!-- RIGHT: Results -->
+      <div>
+        <div class="card" style="min-height:300px;">
+          <h2>Routing Decision Trace</h2>
+          <div id="result-container">
+            <p style="color:var(--muted);font-style:italic;">Configure the routing options and click "Simulate Routing" to see the full decision trace through the pipeline.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 2: FEATURES REFERENCE -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-features">
+    <div class="info-box">
+      All features below are documented in the official <strong>Microsoft Learn</strong> documentation for Dynamics 365 Contact Center / Customer Service.
+      Each card links to the relevant doc page.
+    </div>
+
+    <h2 style="margin:1rem 0 0.5rem;color:var(--primary);">General Routing Settings</h2>
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.75rem;">Configured under Routing in the Copilot Service admin center site map.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h4>Preferred Representative Routing</h4>
+        <p>Routes returning customers to their preferred rep (up to 3 per contact). Falls back to assignment logic or leaves unassigned if preferred rep is unavailable. Works with push-based workstreams only.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/configure-preferred-agent" target="_blank" rel="noopener">configure-preferred-agent</a>
+      </div>
+      <div class="feature-card">
+        <h4>Skill-Based Routing</h4>
+        <p>Matches work items to reps with matching skills and proficiency. Supports exact match and closest match algorithms. Skills can be set manually or via ML intelligent skill finder.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/overview-skill-work-distribution" target="_blank" rel="noopener">overview-skill-work-distribution</a>
+      </div>
+      <div class="feature-card">
+        <h4>Shift-Based Routing</h4>
+        <p>Routes conversations and cases based on rep shift schedules. Only reps currently on shift are eligible for assignment. Integrates with service scheduling calendars.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/overview-unified-routing" target="_blank" rel="noopener">overview-unified-routing</a>
+      </div>
+    </div>
+
+    <h2 style="margin:1rem 0 0.5rem;color:var(--primary);">Record Routing</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h4>Manage Unified Routing</h4>
+        <p>Automates work distribution across channels (chat, voice, and cases). Enabled at the environment level. Once enabled, classification and route-to-queue rules process every work item.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/overview-unified-routing" target="_blank" rel="noopener">overview-unified-routing</a>
+      </div>
+      <div class="feature-card">
+        <h4>Setup Record Routing</h4>
+        <p>Enables Dataverse record types (cases, emails, activities) for routing. Requires intake rules to determine which workstream handles each record. Supports Save &amp; Route action in workspace.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/set-up-record-routing" target="_blank" rel="noopener">set-up-record-routing</a>
+      </div>
+    </div>
+
+    <h2 style="margin:1rem 0 0.5rem;color:var(--primary);">Intelligent Classification</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h4>Intelligent Skill Finder</h4>
+        <p>AI Builder ML model that predicts required skills from work item text. Trained on historical data (or Excel import). Replaces manual classification rules. Requires AI Builder availability.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/set-up-isf-model" target="_blank" rel="noopener">set-up-isf-model</a>
+      </div>
+      <div class="feature-card">
+        <h4>Sentiment Prediction (Preview)</h4>
+        <p>7-point sentiment scale (very positive → very negative). Uses Azure Cognitive Services. Sentiment score can be used in classification and route-to-queue rules for escalation routing.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/use-sentiment-prediction-for-routing" target="_blank" rel="noopener">use-sentiment-prediction-for-routing</a>
+      </div>
+    </div>
+
+    <h2 style="margin:1rem 0 0.5rem;color:var(--primary);">Work Classification</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h4>Logical Classification Rules</h4>
+        <p>Declarative if/then rules: "if IssueCategory = Billing, set Billing skill". Up to 10 rulesets per workstream, 100 rules each. Rules can reference 2 levels of related entity attributes.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/configure-work-classification" target="_blank" rel="noopener">configure-work-classification</a>
+      </div>
+      <div class="feature-card">
+        <h4>ML-Based Skill Classification</h4>
+        <p>Uses intelligent skill finder model. Sends work item text attributes to a published model. Returned tags are attached as skills. Supports iterative retraining from rep feedback.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/configure-work-classification#create-machine-learning-based-skill-classification-rulesets" target="_blank" rel="noopener">ML skill classification</a>
+      </div>
+      <div class="feature-card">
+        <h4>Capacity Profile-Based Rules</h4>
+        <p>Appends capacity profiles to work items via classification. Assignment then checks reps have matching capacity profiles. Supports multiple profiles per workstream for tiered limits.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/configure-work-classification#create-classification-rulesets-based-on-capacity-profiles" target="_blank" rel="noopener">Capacity profile rules</a>
+      </div>
+      <div class="feature-card">
+        <h4>Sentiment-Based Classification</h4>
+        <p>Uses sentiment prediction output as a classification attribute. Route negative-sentiment items to specialized queues with experienced reps.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/use-sentiment-prediction-for-routing#create-classification-rules-based-on-sentiment-prediction-model" target="_blank" rel="noopener">Sentiment classification</a>
+      </div>
+    </div>
+
+    <h2 style="margin:1rem 0 0.5rem;color:var(--primary);">Queues &amp; Capacity</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h4>Advanced Queues</h4>
+        <p>Three types: Messaging, Record, Voice. Support queue prioritization (numeric), operating hours, overflow management, and fallback queues per workstream.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/queues-omnichannel" target="_blank" rel="noopener">queues-omnichannel</a>
+      </div>
+      <div class="feature-card">
+        <h4>Capacity Profiles</h4>
+        <p>Define work item limits per rep with reset frequency (immediate or end-of-day). Supports custom per-rep limits, multiple profiles per workstream, and assignment blocking.</p>
+        <a class="doc-link" href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/capacity-profiles" target="_blank" rel="noopener">capacity-profiles</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TAB 3: ASSIGNMENT METHODS -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-assignment">
+    <div class="info-box">
+      Assignment methods determine how work items in a queue are prioritized and assigned to eligible reps.
+      <strong>Source:</strong> <a href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/assignment-methods" target="_blank" rel="noopener" style="color:var(--primary);">assignment-methods</a>
+    </div>
+
+    <div class="feature-grid" style="margin-top:1rem;">
+      <div class="feature-card">
+        <h4>Highest Capacity</h4>
+        <p>Assigns to the rep with the most available capacity who matches skills and presence. Ties are broken by round robin. Works with both exact and closest skill matching.</p>
+        <div class="info-box" style="margin-top:0.5rem;">
+          <strong>Best for:</strong> Even workload distribution where rep bandwidth varies.
+        </div>
+      </div>
+      <div class="feature-card">
+        <h4>Advanced Round Robin</h4>
+        <p>Assigns to matched reps in order of their last assignment time. Oldest assignment gets next item. Order is maintained per queue. Reps in multiple queues may get back-to-back from different queues.</p>
+        <div class="info-box" style="margin-top:0.5rem;">
+          <strong>Best for:</strong> Fair distribution regardless of capacity differences.
+        </div>
+      </div>
+      <div class="feature-card">
+        <h4>Least Active</h4>
+        <p>Assigns to the rep with the fewest concurrent conversations. Uses "time since last capacity release" as tiebreaker. Default for voice and messaging queues. Not available for record queues.</p>
+        <div class="info-box" style="margin-top:0.5rem;">
+          <strong>Best for:</strong> Voice and messaging when you want reps to handle one thing at a time.
+        </div>
+      </div>
+      <div class="feature-card">
+        <h4>Custom Assignment</h4>
+        <p>Build your own with prioritization rulesets (order work items) and assignment rulesets (match reps). Supports dynamic matching on related entity attributes and calendar schedule checks.</p>
+        <div class="info-box" style="margin-top:0.5rem;">
+          <strong>Key operators:</strong> Skills (exact/custom match), presence status, capacity, calendar schedule (is_working).
+        </div>
+      </div>
+    </div>
+
+    <h2 style="margin:1.5rem 0 0.5rem;color:var(--primary);">Assignment Cycle</h2>
+    <div class="card">
+      <p style="font-size:0.82rem;">The assignment cycle is triggered by: new work item arrival, rep presence change, capacity update, rep added to queue, or a periodic 5-minute timer (records). Each cycle picks top unassigned items and matches to eligible reps. Unmatched items retry in the next cycle.</p>
+      <p style="font-size:0.82rem;margin-top:0.5rem;">Reps can decline up to 3 times (configurable 1–5). After max declines, auto-assignment skips that rep for that work item but they can still manually pick it.</p>
+    </div>
+
+    <h2 style="margin:1.5rem 0 0.5rem;color:var(--primary);">Prioritization Rulesets</h2>
+    <div class="card">
+      <p style="font-size:0.82rem;">One prioritization ruleset per queue. Rules are ordered — first matching rule creates the top priority bucket. Within each bucket, items are sorted by the Order By attribute (FIFO, First Response By, etc.). Items not matching any rule go to the last bucket with FIFO ordering.</p>
+      <p style="font-size:0.82rem;margin-top:0.5rem;"><strong>Example:</strong> Rule 1: Priority=High AND Category=Premium (ordered FIFO) → Rule 2: Category=Premium (FIFO) → Rule 3: Priority=High (by First Response By ASC)</p>
+    </div>
+  </div>
+
 </div>
 
 <footer>
-  <p>D365 Unified Routing & Agent Configuration Lab — Routing Simulator</p>
+  <p>D365 Contact Center Routing Simulator &mdash; Based on <a href="https://learn.microsoft.com/en-us/dynamics365/customer-service/administer/overview-unified-routing" target="_blank" rel="noopener">Microsoft Learn documentation</a></p>
 </footer>
 
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js" integrity="sha384-9H+sG3VBYGfK5IpwOjQpJcqMXBD7MJCYV+2rBJfCRJXuGnD9GZAQ3qTlL0tKSvr" crossorigin="anonymous"></script>
+<script src="dataverse.js"></script>
 <script>
 (function() {
-  // State
-  let selectedCategory = null;
-  let selectedSkills = new Set(['Billing', 'Hardware']);
-  let selectedQueues = new Set(['Billing Queue', 'Hardware Queue', 'Default Queue']);
-  let capacity = 3;
+  'use strict';
 
-  // Toggle buttons
-  function setupToggleGroup(groupId, stateSet, allowNone) {
-    const group = document.getElementById(groupId);
-    group.addEventListener('click', function(e) {
-      const btn = e.target.closest('.toggle-btn');
+  // ── State ──
+  var state = {
+    category: null,
+    skills: new Set(['Billing', 'Hardware', 'Software']),
+    queues: new Set(['Billing Queue', 'Hardware Queue', 'Software Queue', 'VIP Queue', 'Default Queue']),
+    capacity: 3
+  };
+
+  // ── Tabs ──
+  document.querySelectorAll('.tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+      tab.classList.add('active');
+      document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Toggle groups ──
+  function setupMultiToggle(groupId, stateSet) {
+    document.getElementById(groupId).addEventListener('click', function(e) {
+      var btn = e.target.closest('.toggle-btn');
       if (!btn) return;
-      const val = btn.dataset.value;
-      if (stateSet === null) {
-        // single-select (category)
-        document.querySelectorAll('#' + groupId + ' .toggle-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedCategory = val;
-      } else {
-        // multi-select (skills, queues)
-        if (btn.classList.contains('active')) {
-          btn.classList.remove('active');
-          stateSet.delete(val);
-        } else {
-          btn.classList.add('active');
-          stateSet.add(val);
-        }
-      }
+      var val = btn.dataset.value;
+      if (btn.classList.contains('active')) { btn.classList.remove('active'); stateSet.delete(val); }
+      else { btn.classList.add('active'); stateSet.add(val); }
     });
   }
-
-  // Category is single-select
   document.getElementById('issue-category-group').addEventListener('click', function(e) {
-    const btn = e.target.closest('.toggle-btn');
+    var btn = e.target.closest('.toggle-btn');
     if (!btn) return;
-    document.querySelectorAll('#issue-category-group .toggle-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#issue-category-group .toggle-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
-    selectedCategory = btn.dataset.value;
+    state.category = btn.dataset.value;
+  });
+  setupMultiToggle('skills-group', state.skills);
+  setupMultiToggle('queues-group', state.queues);
+
+  // ── Preferred rep toggle ──
+  document.getElementById('preferred-rep-enabled').addEventListener('change', function() {
+    document.getElementById('preferred-rep-options').style.display = this.checked ? 'block' : 'none';
   });
 
-  setupToggleGroup('skills-group', selectedSkills);
-  setupToggleGroup('queues-group', selectedQueues);
+  // ── Skill routing toggle ──
+  document.getElementById('skill-routing-enabled').addEventListener('change', function() {
+    document.getElementById('skill-routing-options').style.display = this.checked ? 'block' : 'none';
+  });
 
-  // Capacity slider
-  const slider = document.getElementById('capacity-slider');
-  const capValue = document.getElementById('capacity-value');
-  const capFill = document.getElementById('capacity-fill');
+  // ── Capacity slider ──
+  var slider = document.getElementById('capacity-slider');
+  var capValue = document.getElementById('capacity-value');
+  var capFill = document.getElementById('capacity-fill');
   slider.addEventListener('input', function() {
-    capacity = parseInt(this.value);
-    capValue.textContent = capacity;
-    const pct = (capacity / 5) * 100;
+    state.capacity = parseInt(this.value);
+    capValue.textContent = state.capacity;
+    var pct = (state.capacity / 5) * 100;
     capFill.style.width = pct + '%';
-    capFill.style.background = capacity === 0 ? 'var(--danger)' : capacity <= 2 ? 'var(--warning)' : 'var(--success)';
+    capFill.style.background = state.capacity === 0 ? 'var(--danger)' : state.capacity <= 2 ? 'var(--warning)' : 'var(--success)';
   });
 
-  // Pipeline animation
-  function animatePipeline(stages) {
-    document.querySelectorAll('.pipeline-stage').forEach(s => { s.classList.remove('active', 'passed'); });
-    stages.forEach(function(stageId, i) {
+  // ── Pipeline animation ──
+  function animatePipeline(stageStates) {
+    document.querySelectorAll('.pipeline-stage').forEach(function(s) { s.classList.remove('active', 'passed', 'skipped'); });
+    var ids = Object.keys(stageStates);
+    ids.forEach(function(id, i) {
       setTimeout(function() {
-        const el = document.getElementById('stage-' + stageId);
-        if (el) {
+        var el = document.getElementById('stage-' + id);
+        if (!el) return;
+        var st = stageStates[id];
+        if (st === 'skipped') el.classList.add('skipped');
+        else {
           el.classList.add('active');
-          // Mark previous as passed
           if (i > 0) {
-            const prev = document.getElementById('stage-' + stages[i - 1]);
-            if (prev) { prev.classList.remove('active'); prev.classList.add('passed'); }
+            var prevId = ids[i - 1];
+            var prevEl = document.getElementById('stage-' + prevId);
+            if (prevEl && stageStates[prevId] !== 'skipped') {
+              prevEl.classList.remove('active');
+              prevEl.classList.add('passed');
+            }
           }
         }
-      }, i * 400);
+      }, i * 350);
     });
-    // Mark last as passed after animation
     setTimeout(function() {
-      const last = document.getElementById('stage-' + stages[stages.length - 1]);
-      if (last) { last.classList.remove('active'); last.classList.add('passed'); }
-    }, stages.length * 400);
+      var last = ids[ids.length - 1];
+      var el = document.getElementById('stage-' + last);
+      if (el && stageStates[last] !== 'skipped') { el.classList.remove('active'); el.classList.add('passed'); }
+    }, ids.length * 350);
   }
 
-  // Simulate routing
+  // ── Representatives data ──
+  var reps = [
+    { id: 'ana', name: 'Ana Bowman', skills: ['Billing', 'Software'], capacity: 3, shift: true, preferred: true },
+    { id: 'carlos', name: 'Carlos Garcia', skills: ['Hardware', 'Returns'], capacity: 4, shift: true, preferred: false },
+    { id: 'diana', name: 'Diana Kim', skills: ['Billing', 'Hardware', 'VIP', 'Spanish'], capacity: 1, shift: true, preferred: false },
+    { id: 'eric', name: 'Eric Wang', skills: ['Billing', 'Software', 'Returns'], capacity: 5, shift: false, preferred: false }
+  ];
+
+  // ── Simulate ──
   document.getElementById('simulate-btn').addEventListener('click', function() {
-    if (!selectedCategory) {
-      document.getElementById('result-container').innerHTML =
-        '<p style="color:var(--danger);font-weight:600;">Please select an Issue Category first.</p>';
+    if (!state.category) {
+      document.getElementById('result-container').innerHTML = '<p style="color:var(--danger);font-weight:600;">Select an Issue Category to simulate.</p>';
       return;
     }
 
-    const steps = [];
-    const channel = document.getElementById('channel').value;
+    var steps = [];
+    var channel = document.getElementById('channel').value;
+    var priority = document.getElementById('case-priority').value;
+    var sentiment = document.getElementById('customer-sentiment').value;
+    var prefEnabled = document.getElementById('preferred-rep-enabled').checked;
+    var prefFallback = document.getElementById('preferred-rep-fallback').value;
+    var skillEnabled = document.getElementById('skill-routing-enabled').checked;
+    var skillAlgo = document.getElementById('skill-match-algo').value;
+    var shiftEnabled = document.getElementById('shift-routing-enabled').checked;
+    var isfEnabled = document.getElementById('isf-enabled').checked;
+    var sentimentEnabled = document.getElementById('sentiment-enabled').checked;
+    var classificationType = document.getElementById('classification-type').value;
+    var assignmentMethod = document.getElementById('assignment-method').value;
+    var isRecord = (channel === 'case' || channel === 'email');
+    var isVoice = (channel === 'voice');
 
-    // Stage 1: Channel
-    steps.push({ icon: '📨', label: 'Channel', text: 'Customer initiated contact via <strong>' + channel + '</strong>.' });
+    var stageStates = {};
 
-    // Stage 2: Workstream
-    steps.push({ icon: '🔀', label: 'Workstream', text: 'Work item received by <strong>Lab Chat Workstream</strong>. Pre-chat survey collected: <span class="tag skill">IssueCategory = ' + selectedCategory + '</span>' });
+    // STAGE 1: Channel
+    var channelLabel = document.querySelector('#channel option:checked').textContent;
+    steps.push({ icon: isRecord ? '📄' : isVoice ? '📞' : '💬', label: 'Channel',
+      text: 'Work item arrived via <span class="tag channel">' + channelLabel + '</span>.' +
+        (isRecord ? ' Queue type: <span class="tag record">Record</span>. Intake rules evaluate workstream.' : ' Queue type: <span class="tag channel">' + (isVoice ? 'Voice' : 'Messaging') + '</span>.') });
+    stageStates.channel = 'active';
 
-    // Stage 3: Classification
-    const matchedSkill = selectedCategory;
-    const skillExists = selectedSkills.has(matchedSkill);
-    if (skillExists) {
-      steps.push({ icon: '🏷️', label: 'Classification', text: 'Rule matched: <code>IssueCategory = ' + selectedCategory + '</code> → Set skill <span class="tag skill">' + matchedSkill + '</span>' });
+    // STAGE 2: Workstream
+    var wsName = isRecord ? 'Case Routing Workstream' : isVoice ? 'Voice Workstream' : 'Chat Workstream';
+    steps.push({ icon: '🔀', label: 'Workstream',
+      text: 'Routed to <strong>' + wsName + '</strong>.' +
+        (!isRecord ? ' Pre-chat context: <span class="tag skill">IssueCategory = ' + state.category + '</span>, Priority = ' + priority : ' Case context: <span class="tag skill">IssueCategory = ' + state.category + '</span>, Priority = ' + priority) +
+        (sentimentEnabled ? ', Sentiment = <span class="tag sentiment">' + sentiment.replace(/-/g, ' ') + '</span>' : '') });
+    stageStates.workstream = 'active';
+
+    // STAGE 3: Preferred representative check
+    var preferredRep = null;
+    if (prefEnabled) {
+      var prefRep = reps.find(function(r) { return r.preferred; });
+      if (prefRep) {
+        var prefAvailable = prefRep.shift || !shiftEnabled;
+        if (prefAvailable && prefRep.capacity > 0) {
+          preferredRep = prefRep;
+          steps.push({ icon: '⭐', label: 'Preferred Rep',
+            text: 'Contact has preferred rep: <span class="tag preferred">' + prefRep.name + '</span>. Rep is available — <strong>bypasses</strong> skill, capacity, and assignment rule checks.' });
+        } else {
+          steps.push({ icon: '⭐', label: 'Preferred Rep',
+            text: 'Contact has preferred rep: <span class="tag preferred">' + prefRep.name + '</span>, but rep is <strong>unavailable</strong> (' +
+              (!prefRep.shift && shiftEnabled ? 'off shift' : 'no capacity') + '). Fallback: <em>' +
+              (prefFallback === 'assignment-logic' ? 'Next best rep via assignment logic' : 'Leave unassigned in queue') + '</em>.' });
+          if (prefFallback === 'unassigned') {
+            steps.push({ icon: '⏸️', label: 'Result', text: 'Work item placed in queue <strong>unassigned</strong>, waiting for preferred rep or manual assignment.' });
+            stageStates.preferred = 'active';
+            stageStates.classification = 'skipped';
+            stageStates.routing = 'skipped';
+            stageStates.assignment = 'skipped';
+            stageStates.workspace = 'skipped';
+            renderResult(steps, stageStates);
+            return;
+          }
+        }
+      } else {
+        steps.push({ icon: '⭐', label: 'Preferred Rep', text: 'Preferred rep routing enabled, but no preferred rep mapped for this contact. Proceeding to standard routing.' });
+      }
+      stageStates.preferred = 'active';
     } else {
-      steps.push({ icon: '⚠️', label: 'Classification', text: 'Rule matched <code>IssueCategory = ' + selectedCategory + '</code>, but skill <strong>' + matchedSkill + '</strong> does not exist in the system. No skill set.' });
+      stageStates.preferred = 'skipped';
     }
 
-    // Stage 4: Route-to-queue
-    const targetQueue = matchedSkill + ' Queue';
-    const queueExists = selectedQueues.has(targetQueue);
-    if (skillExists && queueExists) {
-      steps.push({ icon: '📋', label: 'Route-to-Queue', text: 'Skill <span class="tag skill">' + matchedSkill + '</span> matched → Routed to <span class="tag queue">' + targetQueue + '</span>' });
-    } else if (skillExists && !queueExists) {
-      steps.push({ icon: '⚠️', label: 'Route-to-Queue', text: 'Skill <span class="tag skill">' + matchedSkill + '</span> matched, but <strong>' + targetQueue + '</strong> does not exist. Falling back to <span class="tag queue">Default Queue</span>' });
-    } else {
-      steps.push({ icon: '⚠️', label: 'Route-to-Queue', text: 'No skill set. Falling back to <span class="tag queue">Default Queue</span>' });
+    // If preferred rep was found and available, skip classification/routing
+    if (preferredRep) {
+      stageStates.classification = 'skipped';
+      stageStates.routing = 'skipped';
+      stageStates.assignment = 'active';
+      steps.push({ icon: '👤', label: 'Assignment', text: 'Directly assigned to preferred rep <span class="tag agent">' + preferredRep.name + '</span>.' });
+      stageStates.workspace = 'active';
+      steps.push({ icon: '✅', label: 'Workspace', text: 'Session opened for <span class="tag agent">' + preferredRep.name + '</span>. Queue assignment skipped (preferred rep routing).' });
+      renderResult(steps, stageStates);
+      return;
     }
 
-    // Stage 5: Assignment
-    if (capacity > 0) {
-      steps.push({ icon: '👤', label: 'Assignment', text: 'Agent found with capacity (' + capacity + '/5). Work item assigned to <span class="tag agent">Agent</span> via round-robin.' });
+    // STAGE 4: Classification
+    var taggedSkills = [];
+    var taggedCapacityProfile = null;
+    var classNote = '';
+
+    if (classificationType === 'ml-skill' && isfEnabled) {
+      taggedSkills = [state.category];
+      if (state.skills.has(state.category)) {
+        classNote = 'Intelligent Skill Finder ML model predicted skill <span class="tag skill">' + state.category + '</span> from work item text.';
+      } else {
+        classNote = 'ML model predicted skill "' + state.category + '", but it does not exist in system. No skill attached.';
+        taggedSkills = [];
+      }
+    } else if (classificationType === 'capacity-profile') {
+      taggedCapacityProfile = priority === 'high' ? 'High-Priority Profile' : 'Standard Profile';
+      classNote = 'Capacity profile rule: Priority = ' + priority + ' → Attached <span class="tag capacity">' + taggedCapacityProfile + '</span>.';
+      taggedSkills = state.skills.has(state.category) ? [state.category] : [];
+      if (taggedSkills.length > 0) classNote += ' Also set skill <span class="tag skill">' + state.category + '</span>.';
     } else {
-      steps.push({ icon: '⏳', label: 'Assignment', text: 'No agents with available capacity. Work item <strong>waiting in queue</strong>.' });
+      if (state.skills.has(state.category)) {
+        taggedSkills = [state.category];
+        classNote = 'Logical rule matched: <code>IssueCategory = ' + state.category + '</code> → Set skill <span class="tag skill">' + state.category + '</span>.';
+      } else {
+        classNote = 'Logical rule matched <code>IssueCategory = ' + state.category + '</code>, but skill <strong>' + state.category + '</strong> does not exist. No skill attached.';
+      }
     }
 
-    // Stage 6: Workspace
-    if (capacity > 0) {
-      const finalQueue = (skillExists && queueExists) ? targetQueue : 'Default Queue';
-      steps.push({ icon: '✅', label: 'Agent Workspace', text: 'Session opened. Agent sees: Queue = <span class="tag queue">' + finalQueue + '</span>' + (skillExists ? ', Skill = <span class="tag skill">' + matchedSkill + '</span>' : '') + ', Survey = IssueCategory: ' + selectedCategory });
-    } else {
-      steps.push({ icon: '⏳', label: 'Agent Workspace', text: 'Waiting for agent to become available...' });
+    if (sentimentEnabled) {
+      var isNeg = sentiment.indexOf('negative') !== -1;
+      if (isNeg) {
+        classNote += ' Sentiment prediction: <span class="tag sentiment">' + sentiment.replace(/-/g, ' ') + '</span> → flagged for escalation routing.';
+      } else {
+        classNote += ' Sentiment: <span class="tag sentiment">' + sentiment.replace(/-/g, ' ') + '</span> (standard routing).';
+      }
     }
 
-    // Render
-    let html = '<div class="result-panel"><h2>Why This Routed Here</h2>';
+    steps.push({ icon: isfEnabled && classificationType === 'ml-skill' ? '🤖' : '🏷️', label: 'Classification', text: classNote });
+    stageStates.classification = 'active';
+
+    // STAGE 5: Route-to-Queue
+    var targetQueue = null;
+
+    // Sentiment escalation
+    if (sentimentEnabled && sentiment.indexOf('negative') !== -1 && state.queues.has('VIP Queue')) {
+      targetQueue = 'VIP Queue';
+      steps.push({ icon: '🚨', label: 'Route-to-Queue',
+        text: 'Sentiment-based routing: negative sentiment → routed to <span class="tag queue">VIP Queue</span> for experienced reps.' });
+    }
+    // Skill-based routing
+    else if (skillEnabled && taggedSkills.length > 0) {
+      var skillQueue = taggedSkills[0] + ' Queue';
+      if (state.queues.has(skillQueue)) {
+        targetQueue = skillQueue;
+        steps.push({ icon: '📋', label: 'Route-to-Queue',
+          text: 'Skill match (' + skillAlgo + '): <span class="tag skill">' + taggedSkills[0] + '</span> → <span class="tag queue">' + skillQueue + '</span>.' });
+      } else {
+        targetQueue = state.queues.has('Default Queue') ? 'Default Queue' : null;
+        steps.push({ icon: '⚠️', label: 'Route-to-Queue',
+          text: 'Skill <span class="tag skill">' + taggedSkills[0] + '</span> matched, but <strong>' + skillQueue + '</strong> not found. Fallback → <span class="tag queue">Default Queue</span>.' });
+      }
+    } else {
+      targetQueue = state.queues.has('Default Queue') ? 'Default Queue' : null;
+      steps.push({ icon: '⚠️', label: 'Route-to-Queue',
+        text: 'No skill-based route matched. Fallback → <span class="tag queue">' + (targetQueue || 'No queue available') + '</span>.' });
+    }
+    stageStates.routing = 'active';
+
+    if (!targetQueue) {
+      steps.push({ icon: '❌', label: 'Error', text: 'No queue available. Work item stuck — check fallback queue configuration.' });
+      stageStates.assignment = 'skipped';
+      stageStates.workspace = 'skipped';
+      renderResult(steps, stageStates);
+      return;
+    }
+
+    // STAGE 6: Assignment
+    var eligible = reps.filter(function(r) {
+      if (shiftEnabled && !r.shift) return false;
+      if (r.capacity <= 0) return false;
+      if (skillEnabled && taggedSkills.length > 0) {
+        if (skillAlgo === 'exact') {
+          return taggedSkills.every(function(s) { return r.skills.indexOf(s) !== -1; });
+        } else {
+          return taggedSkills.some(function(s) { return r.skills.indexOf(s) !== -1; });
+        }
+      }
+      return true;
+    });
+
+    var assignedRep = null;
+    var assignNote = '';
+
+    if (eligible.length === 0) {
+      assignNote = 'No eligible reps found (checked: skills' + (skillAlgo === 'exact' ? ' exact' : ' closest') + ' match, capacity > 0' +
+        (shiftEnabled ? ', on shift' : '') + '). Work item <strong>waiting in queue</strong>.';
+      steps.push({ icon: '⏳', label: 'Assignment', text: assignNote });
+    } else {
+      if (assignmentMethod === 'highest-capacity') {
+        eligible.sort(function(a, b) { return b.capacity - a.capacity; });
+        assignedRep = eligible[0];
+        assignNote = 'Highest Capacity method: <span class="tag agent">' + assignedRep.name + '</span> (capacity ' + assignedRep.capacity + '/5).';
+      } else if (assignmentMethod === 'least-active') {
+        if (!isVoice && channel !== 'chat' && channel !== 'sms' && channel !== 'teams' && channel !== 'whatsapp' && channel !== 'facebook') {
+          assignNote = 'Least Active is only for voice/messaging. Falling back to Round Robin.';
+          assignedRep = eligible[0];
+          assignNote += ' Assigned to <span class="tag agent">' + assignedRep.name + '</span>.';
+        } else {
+          eligible.sort(function(a, b) { return b.capacity - a.capacity; });
+          assignedRep = eligible[0];
+          assignNote = 'Least Active method: <span class="tag agent">' + assignedRep.name + '</span> (fewest concurrent items).';
+        }
+      } else if (assignmentMethod === 'custom') {
+        assignedRep = eligible[0];
+        assignNote = 'Custom assignment: matched rep with skills + presence + capacity. Assigned to <span class="tag agent">' + assignedRep.name + '</span>.';
+      } else {
+        assignedRep = eligible[0];
+        assignNote = 'Advanced Round Robin: <span class="tag agent">' + assignedRep.name + '</span> (earliest last-assignment time).';
+      }
+      if (eligible.length > 1) {
+        assignNote += ' <em>(' + eligible.length + ' eligible reps evaluated: ' + eligible.map(function(r) { return r.name; }).join(', ') + ')</em>';
+      }
+      steps.push({ icon: '👤', label: 'Assignment', text: assignNote });
+    }
+    stageStates.assignment = 'active';
+
+    // STAGE 7: Workspace
+    if (assignedRep) {
+      var summary = 'Session opened for <span class="tag agent">' + assignedRep.name + '</span>. ';
+      summary += 'Queue: <span class="tag queue">' + targetQueue + '</span>';
+      if (taggedSkills.length > 0) summary += ', Skills: ' + taggedSkills.map(function(s) { return '<span class="tag skill">' + s + '</span>'; }).join(' ');
+      if (taggedCapacityProfile) summary += ', Profile: <span class="tag capacity">' + taggedCapacityProfile + '</span>';
+      summary += ', Channel: <span class="tag channel">' + channelLabel + '</span>';
+      summary += ', Priority: ' + priority;
+      steps.push({ icon: '✅', label: 'Workspace', text: summary });
+      stageStates.workspace = 'active';
+    } else {
+      steps.push({ icon: '⏳', label: 'Workspace', text: 'Waiting for eligible rep to become available...' });
+      stageStates.workspace = 'skipped';
+    }
+
+    // highlight the selected rep in the roster
+    document.querySelectorAll('.rep-card').forEach(function(c) { c.classList.remove('selected', 'unavailable'); });
+    if (assignedRep) {
+      var repCard = document.querySelector('.rep-card[data-rep="' + assignedRep.id + '"]');
+      if (repCard) repCard.classList.add('selected');
+    }
+    eligible.length === 0 && reps.forEach(function(r) {
+      var card = document.querySelector('.rep-card[data-rep="' + r.id + '"]');
+      if (card) card.classList.add('unavailable');
+    });
+
+    renderResult(steps, stageStates);
+  });
+
+  function renderResult(steps, stageStates) {
+    var html = '<div class="result-panel"><h2>Why This Routed Here</h2>';
     steps.forEach(function(s) {
       html += '<div class="step"><span class="step-icon">' + s.icon + '</span><div class="step-text"><span class="step-label">' + s.label + ':</span> ' + s.text + '</div></div>';
     });
     html += '</div>';
     document.getElementById('result-container').innerHTML = html;
+    animatePipeline(stageStates);
+  }
 
-    // Animate pipeline
-    animatePipeline(['channel', 'workstream', 'classification', 'routing', 'assignment', 'workspace']);
+  // ── Connect banner auth tabs ──
+  document.querySelectorAll('.auth-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.auth-tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.auth-panel').forEach(function(p) { p.classList.remove('active'); });
+      tab.classList.add('active');
+      document.getElementById('auth-' + tab.dataset.auth).classList.add('active');
+    });
   });
 
-  // Reset
+  // ── Connect via token paste ──
+  document.getElementById('connect-token-btn').addEventListener('click', async function() {
+    var orgUrl = document.getElementById('org-url').value.trim();
+    var token = document.getElementById('bearer-token').value.trim();
+    if (!orgUrl || !token) { setStatus('Enter both org URL and bearer token.', 'err'); return; }
+    if (!/^https:\/\//i.test(orgUrl)) orgUrl = 'https://' + orgUrl;
+    setStatus('Connecting...', 'loading');
+    try {
+      DataverseClient.loginToken(orgUrl, token);
+      await DataverseClient.testConnection();
+      setStatus('Connected to ' + orgUrl, 'ok');
+      await loadLiveConfig();
+    } catch (e) { setStatus('Connection failed: ' + e.message, 'err'); }
+  });
+
+  // ── Connect via MSAL ──
+  document.getElementById('connect-msal-btn').addEventListener('click', async function() {
+    var orgUrl = document.getElementById('org-url-msal').value.trim();
+    if (!orgUrl) { setStatus('Enter the org URL.', 'err'); return; }
+    if (!/^https:\/\//i.test(orgUrl)) orgUrl = 'https://' + orgUrl;
+    var clientId = document.getElementById('msal-client-id').value.trim() || undefined;
+    setStatus('Opening sign-in popup...', 'loading');
+    try {
+      var info = await DataverseClient.loginMsal(orgUrl, clientId);
+      setStatus('Signed in as ' + info.user + ' (' + info.method + ')', 'ok');
+      await loadLiveConfig();
+    } catch (e) { setStatus('Sign-in failed: ' + e.message, 'err'); }
+  });
+
+  function setStatus(msg, cls) {
+    var el = document.getElementById('connect-status');
+    el.textContent = msg;
+    el.className = 'status ' + cls;
+  }
+
+  // ── Populate simulator with live Dataverse data ──
+  async function loadLiveConfig() {
+    setStatus('Fetching routing configuration...', 'loading');
+    try {
+      var cfg = await DataverseClient.fetchAllConfig();
+      populateFromConfig(cfg);
+      document.getElementById('live-badge').style.display = 'inline-block';
+      // Summary
+      var summary = document.getElementById('connect-summary');
+      summary.style.display = 'block';
+      summary.innerHTML = 'Loaded: <span>' + cfg.queues.length + '</span> queues, <span>' +
+        cfg.skills.length + '</span> skills, <span>' + cfg.workstreams.length + '</span> workstreams, <span>' +
+        cfg.agents.length + '</span> agents, <span>' + cfg.capacityProfiles.length + '</span> capacity profiles';
+      if (cfg.errors.length > 0) {
+        summary.innerHTML += '<br><span style="color:var(--warning);">Partial errors: ' + cfg.errors.join('; ') + '</span>';
+      }
+      setStatus('Connected — live data loaded', 'ok');
+    } catch (e) {
+      setStatus('Failed to load config: ' + e.message, 'err');
+    }
+  }
+
+  function populateFromConfig(cfg) {
+    // ── Populate skills toggle group ──
+    if (cfg.skills.length > 0) {
+      state.skills.clear();
+      var skillsGroup = document.getElementById('skills-group');
+      skillsGroup.innerHTML = '';
+      cfg.skills.forEach(function(s) {
+        state.skills.add(s.name);
+        var btn = document.createElement('div');
+        btn.className = 'toggle-btn active';
+        btn.dataset.value = s.name;
+        btn.textContent = s.name;
+        skillsGroup.appendChild(btn);
+      });
+    }
+
+    // ── Populate queues toggle group ──
+    if (cfg.queues.length > 0) {
+      state.queues.clear();
+      var queuesGroup = document.getElementById('queues-group');
+      queuesGroup.innerHTML = '';
+      cfg.queues.forEach(function(q) {
+        state.queues.add(q.name);
+        var btn = document.createElement('div');
+        btn.className = 'toggle-btn active';
+        btn.dataset.value = q.name;
+        btn.textContent = q.name + (q.type ? ' (' + q.type + ')' : '');
+        queuesGroup.appendChild(btn);
+      });
+    }
+
+    // ── Populate issue category from skills (best guess) ──
+    if (cfg.skills.length > 0) {
+      var catGroup = document.getElementById('issue-category-group');
+      catGroup.innerHTML = '';
+      cfg.skills.forEach(function(s) {
+        var btn = document.createElement('div');
+        btn.className = 'toggle-btn';
+        btn.dataset.value = s.name;
+        btn.textContent = s.name;
+        catGroup.appendChild(btn);
+      });
+    }
+
+    // ── Populate rep roster ──
+    if (cfg.agents.length > 0) {
+      reps.length = 0;
+      var roster = document.getElementById('rep-roster');
+      roster.innerHTML = '';
+      var colors = ['#0078d4', '#107c10', '#5c2d91', '#ff8c00', '#d13438', '#00897b', '#c62828', '#1565c0'];
+      cfg.agents.forEach(function(a, i) {
+        var initials = a.name.split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
+        reps.push({ id: 'live-' + i, name: a.name, skills: a.skills, capacity: 3, shift: true, preferred: i === 0 });
+        var card = document.createElement('div');
+        card.className = 'rep-card';
+        card.dataset.rep = 'live-' + i;
+        card.innerHTML = '<div class="avatar" style="background:' + colors[i % colors.length] + '">' + initials + '</div>' +
+          '<div class="details"><div class="name">' + a.name + '</div>' +
+          '<div class="meta">Skills: ' + (a.skills.length > 0 ? a.skills.join(', ') : 'none') + ' | Capacity: 3/5</div></div>';
+        roster.appendChild(card);
+      });
+    }
+
+    // ── Populate workstream channel options ──
+    if (cfg.workstreams.length > 0) {
+      var channelSelect = document.getElementById('channel');
+      // Add a live workstreams optgroup
+      var existingLive = channelSelect.querySelector('optgroup[label="Live Workstreams"]');
+      if (existingLive) existingLive.remove();
+      var optGroup = document.createElement('optgroup');
+      optGroup.label = 'Live Workstreams';
+      cfg.workstreams.forEach(function(w) {
+        var opt = document.createElement('option');
+        opt.value = 'ws-' + w.channel.toLowerCase().replace(/\s+/g, '-');
+        opt.textContent = w.name + ' (' + w.channel + ', ' + w.mode + ')';
+        optGroup.appendChild(opt);
+      });
+      channelSelect.insertBefore(optGroup, channelSelect.firstChild);
+    }
+
+    // Re-bind toggle listeners after DOM replacement
+    setupMultiToggle('skills-group', state.skills);
+    setupMultiToggle('queues-group', state.queues);
+    document.getElementById('issue-category-group').addEventListener('click', function(e) {
+      var btn = e.target.closest('.toggle-btn');
+      if (!btn) return;
+      document.querySelectorAll('#issue-category-group .toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.category = btn.dataset.value;
+    });
+  }
+
+  // ── Reset ──
   document.getElementById('reset-btn').addEventListener('click', function() {
-    selectedCategory = null;
-    document.querySelectorAll('#issue-category-group .toggle-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.pipeline-stage').forEach(s => { s.classList.remove('active', 'passed'); });
+    state.category = null;
+    document.querySelectorAll('#issue-category-group .toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.pipeline-stage').forEach(function(s) { s.classList.remove('active', 'passed', 'skipped'); });
+    document.querySelectorAll('.rep-card').forEach(function(c) { c.classList.remove('selected', 'unavailable'); });
     document.getElementById('result-container').innerHTML =
-      '<p style="color:var(--muted);font-style:italic;">Select an Issue Category and click "Simulate Routing" to see the decision trace.</p>';
-    slider.value = 3;
-    capacity = 3;
-    capValue.textContent = '3';
-    capFill.style.width = '60%';
-    capFill.style.background = 'var(--success)';
+      '<p style="color:var(--muted);font-style:italic;">Configure the routing options and click "Simulate Routing" to see the full decision trace through the pipeline.</p>';
+    slider.value = 3; state.capacity = 3; capValue.textContent = '3'; capFill.style.width = '60%'; capFill.style.background = 'var(--success)';
+    document.getElementById('preferred-rep-enabled').checked = false;
+    document.getElementById('preferred-rep-options').style.display = 'none';
+    document.getElementById('case-priority').value = 'normal';
+    document.getElementById('customer-sentiment').value = 'neutral';
   });
 })();
 </script>

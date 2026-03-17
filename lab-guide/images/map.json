@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "step": "001",
+    "filename": "step-001-open-copilot-service-admin.png",
+    "url": "https://org7ef5c70f.crm.dynamics.com/main.aspx?appid=c0e488c4-b846-ef11-a317-6045bda86808&pagetype=control&controlName=MscrmControls.ModernAdmin.OCAdminConfigurationControl&data=%7B%22settingType%22%3A%22csachome%22%7D",
+    "description": "Copilot Service admin center landing page",
+    "timestamp": "2026-03-17T20:32:13.797Z"
+  }
+]

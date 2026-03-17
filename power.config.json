@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "appId": null,
+  "appDisplayName": "D365RoutingSim",
+  "region": "prod",
+  "environmentId": "8247265b-b5f8-e149-9209-5a3455e1a81d",
+  "description": "",
+  "buildPath": "./web-app",
+  "buildEntryPoint": "index.html",
+  "localAppUrl": "http://localhost:3000",
+  "logoPath": "Default",
+  "connectionReferences": {},
+  "databaseReferences": {}
+}
