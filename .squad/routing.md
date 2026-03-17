@@ -6,12 +6,13 @@ How to decide who handles what.
 
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
-| {domain 1} | {Name} | {example tasks} |
-| {domain 2} | {Name} | {example tasks} |
-| {domain 3} | {Name} | {example tasks} |
-| Code review | {Name} | Review PRs, check quality, suggest improvements |
-| Testing | {Name} | Write tests, find edge cases, verify fixes |
-| Scope & priorities | {Name} | What to build next, trade-offs, decisions |
+| Lab guide content, step sequencing, WHY/HOW | Keaton | Write steps, validate against baseline, routing logic |
+| Playwright automation, selectors, screenshots | McManus | Test specs, captureStep, login flow, selector updates |
+| Web app UI, routing simulator, visualization | Verbal | HTML/CSS/JS, pipeline animation, decision trace panel |
+| Docker, CI/CD, Bicep, Azure deployment | Fenster | Dockerfile, docker-compose, GitHub Actions, infra |
+| Code review | Keaton | Review PRs, check quality, suggest improvements |
+| Testing | McManus | Write tests, find edge cases, verify fixes |
+| Scope & priorities | Keaton | What to build next, trade-offs, decisions |
 | Async issue work (bugs, tests, small features) | @copilot 🤖 | Well-defined tasks matching capability profile |
 | Session logging | Scribe | Automatic — never needs routing |
 
