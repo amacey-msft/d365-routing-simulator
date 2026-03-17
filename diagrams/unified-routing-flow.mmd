@@ -1,0 +1,42 @@
+%% Unified Routing Pipeline — Mental Model
+%% Inputs → Classification → Routing → Queue → Assignment → Agent Workspace
+
+graph LR
+    subgraph Inputs
+        A[Customer initiates contact<br/>Chat / Email / Voice] --> B[Workstream receives work item]
+        B --> C[Pre-chat survey collects context<br/>e.g. IssueCategory]
+    end
+
+    subgraph Classification
+        C --> D[Work Classification Rules evaluate]
+        D --> E{Rule conditions met?}
+        E -->|Yes| F[Set skill requirements<br/>e.g. Billing, Hardware]
+        E -->|No| G[Default / fallback skill or none]
+    end
+
+    subgraph Routing
+        F --> H[Route-to-Queue Rules evaluate]
+        G --> H
+        H --> I{Queue match by skills?}
+        I -->|Match| J[Work item enters matched Queue]
+        I -->|No match| K[Fallback Queue]
+    end
+
+    subgraph Assignment
+        J --> L[Assignment Rules evaluate<br/>Round robin / Capacity / Custom]
+        K --> L
+        L --> M{Agent available<br/>with capacity?}
+        M -->|Yes| N[Work item assigned to Agent]
+        M -->|No| O[Work item waits in queue]
+    end
+
+    subgraph AgentWorkspace["Agent Workspace"]
+        N --> P[Session opens in<br/>Customer Service workspace]
+        P --> Q[Agent sees context:<br/>skills, survey answers,<br/>customer info]
+    end
+
+    style Inputs fill:#e3f2fd,stroke:#1565c0
+    style Classification fill:#fff3e0,stroke:#e65100
+    style Routing fill:#e8f5e9,stroke:#2e7d32
+    style Assignment fill:#f3e5f5,stroke:#6a1b9a
+    style AgentWorkspace fill:#fce4ec,stroke:#c62828

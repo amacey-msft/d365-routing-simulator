@@ -1,0 +1,30 @@
+# Environment
+.env
+*.local
+
+# Node
+node_modules/
+dist/
+
+# Playwright
+automation/test-results/
+automation/playwright-report/
+automation/.auth/
+
+# Squad: ignore runtime state (logs, inbox, sessions)
+.squad/orchestration-log/
+.squad/log/
+.squad/decisions/inbox/
+.squad/sessions/
+.squad-workstream
+
+# References (large binaries, not committed)
+references/*.docx
+references/*.pdf
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Docker
+*.log
