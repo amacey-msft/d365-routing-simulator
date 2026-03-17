@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>D365 Unified Routing Simulator</title>
+  <style>
+    :root {
+      --bg: #f5f6fa;
+      --card: #ffffff;
+      --primary: #0078d4;
+      --success: #107c10;
+      --warning: #ff8c00;
+      --danger: #d13438;
+      --text: #1b1b1b;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+    header { background: var(--primary); color: #fff; padding: 1.5rem 0; margin-bottom: 2rem; }
+    header h1 { font-size: 1.5rem; font-weight: 600; }
+    header p { opacity: 0.85; margin-top: 0.25rem; }
+
+    .pipeline { display: flex; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .pipeline-stage {
+      flex: 1; min-width: 140px; padding: 0.75rem 1rem;
+      border-radius: var(--radius); text-align: center; font-size: 0.85rem;
+      font-weight: 600; border: 2px solid var(--border); background: var(--card);
+      transition: all 0.3s;
+    }
+    .pipeline-stage.active { border-color: var(--primary); background: #e6f2ff; }
+    .pipeline-stage.passed { border-color: var(--success); background: #e6ffe6; }
+    .pipeline-stage .arrow { display: block; color: var(--muted); font-size: 1.2rem; margin-top: 0.25rem; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .card h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary); }
+    .card h3 { font-size: 0.95rem; margin: 1rem 0 0.5rem; }
+
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; }
+    select, input[type="range"] { width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
+    select { background: #fff; cursor: pointer; }
+
+    .toggle-group { display: flex; gap: 0.5rem; margin: 0.5rem 0; flex-wrap: wrap; }
+    .toggle-btn {
+      padding: 0.4rem 0.85rem; border: 1px solid var(--border); border-radius: 20px;
+      cursor: pointer; font-size: 0.8rem; background: var(--card); transition: all 0.2s;
+    }
+    .toggle-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .toggle-btn:hover { border-color: var(--primary); }
+
+    .capacity-bar {
+      height: 8px; background: #e5e7eb; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;
+    }
+    .capacity-bar .fill {
+      height: 100%; border-radius: 4px; transition: width 0.5s;
+    }
+
+    .result-panel {
+      background: #f0f7ff; border: 2px solid var(--primary); border-radius: var(--radius);
+      padding: 1.5rem; margin-top: 1.5rem;
+    }
+    .result-panel h2 { color: var(--primary); }
+    .result-panel .step { padding: 0.5rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 0.75rem; }
+    .result-panel .step:last-child { border-bottom: none; }
+    .result-panel .step-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem; }
+    .result-panel .step-text { font-size: 0.9rem; }
+    .result-panel .step-label { font-weight: 600; }
+
+    .btn {
+      display: inline-block; padding: 0.6rem 1.5rem; border: none; border-radius: 6px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+      color: #fff; background: var(--primary); margin-top: 1rem;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn.reset { background: var(--muted); }
+
+    .tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .tag.skill { background: #fff3e0; color: #e65100; }
+    .tag.queue { background: #e8f5e9; color: #2e7d32; }
+    .tag.agent { background: #f3e5f5; color: #6a1b9a; }
+
+    footer { text-align: center; padding: 2rem 0; color: var(--muted); font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>D365 Unified Routing Simulator</h1>
+    <p>Visualize how Dynamics 365 Contact Center routes work items through the pipeline</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Pipeline visualization -->
+  <div class="pipeline" id="pipeline">
+    <div class="pipeline-stage" id="stage-channel" data-stage="channel">Channel<span class="arrow">→</span></div>
+    <div class="pipeline-stage" id="stage-workstream" data-stage="workstream">Workstream<span class="arrow">→</span></div>
+    <div class="pipeline-stage" id="stage-classification" data-stage="classification">Classification<span class="arrow">→</span></div>
+    <div class="pipeline-stage" id="stage-routing" data-stage="routing">Route-to-Queue<span class="arrow">→</span></div>
+    <div class="pipeline-stage" id="stage-assignment" data-stage="assignment">Assignment<span class="arrow">→</span></div>
+    <div class="pipeline-stage" id="stage-workspace" data-stage="workspace">Agent Workspace</div>
+  </div>
+
+  <div class="grid">
+    <!-- Input controls -->
+    <div class="card">
+      <h2>Simulate Customer Input</h2>
+
+      <label for="channel">Channel</label>
+      <select id="channel">
+        <option value="chat" selected>Chat (Live Chat Widget)</option>
+        <option value="email">Email</option>
+        <option value="voice">Voice</option>
+      </select>
+
+      <h3>Pre-chat Survey: Issue Category</h3>
+      <div class="toggle-group" id="issue-category-group">
+        <div class="toggle-btn" data-value="Billing">Billing</div>
+        <div class="toggle-btn" data-value="Hardware">Hardware</div>
+        <div class="toggle-btn" data-value="Software">Software</div>
+        <div class="toggle-btn" data-value="General">General</div>
+      </div>
+
+      <h3>Skills in System</h3>
+      <div class="toggle-group" id="skills-group">
+        <div class="toggle-btn active" data-value="Billing">Billing</div>
+        <div class="toggle-btn active" data-value="Hardware">Hardware</div>
+        <div class="toggle-btn" data-value="Software">Software</div>
+      </div>
+
+      <h3>Agent Capacity</h3>
+      <label for="capacity-slider">Available capacity: <span id="capacity-value">3</span> / 5</label>
+      <input type="range" id="capacity-slider" min="0" max="5" value="3">
+      <div class="capacity-bar"><div class="fill" id="capacity-fill" style="width:60%;background:var(--success);"></div></div>
+
+      <h3>Queue Configuration</h3>
+      <div class="toggle-group" id="queues-group">
+        <div class="toggle-btn active" data-value="Billing Queue">Billing Queue</div>
+        <div class="toggle-btn active" data-value="Hardware Queue">Hardware Queue</div>
+        <div class="toggle-btn active" data-value="Default Queue">Default Queue</div>
+      </div>
+
+      <button class="btn" id="simulate-btn">Simulate Routing</button>
+      <button class="btn reset" id="reset-btn">Reset</button>
+    </div>
+
+    <!-- Result panel -->
+    <div class="card">
+      <h2>Routing Decision Trace</h2>
+      <div id="result-container">
+        <p style="color:var(--muted);font-style:italic;">Select an Issue Category and click "Simulate Routing" to see the decision trace.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>D365 Unified Routing & Agent Configuration Lab — Routing Simulator</p>
+</footer>
+
+<script>
+(function() {
+  // State
+  let selectedCategory = null;
+  let selectedSkills = new Set(['Billing', 'Hardware']);
+  let selectedQueues = new Set(['Billing Queue', 'Hardware Queue', 'Default Queue']);
+  let capacity = 3;
+
+  // Toggle buttons
+  function setupToggleGroup(groupId, stateSet, allowNone) {
+    const group = document.getElementById(groupId);
+    group.addEventListener('click', function(e) {
+      const btn = e.target.closest('.toggle-btn');
+      if (!btn) return;
+      const val = btn.dataset.value;
+      if (stateSet === null) {
+        // single-select (category)
+        document.querySelectorAll('#' + groupId + ' .toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCategory = val;
+      } else {
+        // multi-select (skills, queues)
+        if (btn.classList.contains('active')) {
+          btn.classList.remove('active');
+          stateSet.delete(val);
+        } else {
+          btn.classList.add('active');
+          stateSet.add(val);
+        }
+      }
+    });
+  }
+
+  // Category is single-select
+  document.getElementById('issue-category-group').addEventListener('click', function(e) {
+    const btn = e.target.closest('.toggle-btn');
+    if (!btn) return;
+    document.querySelectorAll('#issue-category-group .toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedCategory = btn.dataset.value;
+  });
+
+  setupToggleGroup('skills-group', selectedSkills);
+  setupToggleGroup('queues-group', selectedQueues);
+
+  // Capacity slider
+  const slider = document.getElementById('capacity-slider');
+  const capValue = document.getElementById('capacity-value');
+  const capFill = document.getElementById('capacity-fill');
+  slider.addEventListener('input', function() {
+    capacity = parseInt(this.value);
+    capValue.textContent = capacity;
+    const pct = (capacity / 5) * 100;
+    capFill.style.width = pct + '%';
+    capFill.style.background = capacity === 0 ? 'var(--danger)' : capacity <= 2 ? 'var(--warning)' : 'var(--success)';
+  });
+
+  // Pipeline animation
+  function animatePipeline(stages) {
+    document.querySelectorAll('.pipeline-stage').forEach(s => { s.classList.remove('active', 'passed'); });
+    stages.forEach(function(stageId, i) {
+      setTimeout(function() {
+        const el = document.getElementById('stage-' + stageId);
+        if (el) {
+          el.classList.add('active');
+          // Mark previous as passed
+          if (i > 0) {
+            const prev = document.getElementById('stage-' + stages[i - 1]);
+            if (prev) { prev.classList.remove('active'); prev.classList.add('passed'); }
+          }
+        }
+      }, i * 400);
+    });
+    // Mark last as passed after animation
+    setTimeout(function() {
+      const last = document.getElementById('stage-' + stages[stages.length - 1]);
+      if (last) { last.classList.remove('active'); last.classList.add('passed'); }
+    }, stages.length * 400);
+  }
+
+  // Simulate routing
+  document.getElementById('simulate-btn').addEventListener('click', function() {
+    if (!selectedCategory) {
+      document.getElementById('result-container').innerHTML =
+        '<p style="color:var(--danger);font-weight:600;">Please select an Issue Category first.</p>';
+      return;
+    }
+
+    const steps = [];
+    const channel = document.getElementById('channel').value;
+
+    // Stage 1: Channel
+    steps.push({ icon: '📨', label: 'Channel', text: 'Customer initiated contact via <strong>' + channel + '</strong>.' });
+
+    // Stage 2: Workstream
+    steps.push({ icon: '🔀', label: 'Workstream', text: 'Work item received by <strong>Lab Chat Workstream</strong>. Pre-chat survey collected: <span class="tag skill">IssueCategory = ' + selectedCategory + '</span>' });
+
+    // Stage 3: Classification
+    const matchedSkill = selectedCategory;
+    const skillExists = selectedSkills.has(matchedSkill);
+    if (skillExists) {
+      steps.push({ icon: '🏷️', label: 'Classification', text: 'Rule matched: <code>IssueCategory = ' + selectedCategory + '</code> → Set skill <span class="tag skill">' + matchedSkill + '</span>' });
+    } else {
+      steps.push({ icon: '⚠️', label: 'Classification', text: 'Rule matched <code>IssueCategory = ' + selectedCategory + '</code>, but skill <strong>' + matchedSkill + '</strong> does not exist in the system. No skill set.' });
+    }
+
+    // Stage 4: Route-to-queue
+    const targetQueue = matchedSkill + ' Queue';
+    const queueExists = selectedQueues.has(targetQueue);
+    if (skillExists && queueExists) {
+      steps.push({ icon: '📋', label: 'Route-to-Queue', text: 'Skill <span class="tag skill">' + matchedSkill + '</span> matched → Routed to <span class="tag queue">' + targetQueue + '</span>' });
+    } else if (skillExists && !queueExists) {
+      steps.push({ icon: '⚠️', label: 'Route-to-Queue', text: 'Skill <span class="tag skill">' + matchedSkill + '</span> matched, but <strong>' + targetQueue + '</strong> does not exist. Falling back to <span class="tag queue">Default Queue</span>' });
+    } else {
+      steps.push({ icon: '⚠️', label: 'Route-to-Queue', text: 'No skill set. Falling back to <span class="tag queue">Default Queue</span>' });
+    }
+
+    // Stage 5: Assignment
+    if (capacity > 0) {
+      steps.push({ icon: '👤', label: 'Assignment', text: 'Agent found with capacity (' + capacity + '/5). Work item assigned to <span class="tag agent">Agent</span> via round-robin.' });
+    } else {
+      steps.push({ icon: '⏳', label: 'Assignment', text: 'No agents with available capacity. Work item <strong>waiting in queue</strong>.' });
+    }
+
+    // Stage 6: Workspace
+    if (capacity > 0) {
+      const finalQueue = (skillExists && queueExists) ? targetQueue : 'Default Queue';
+      steps.push({ icon: '✅', label: 'Agent Workspace', text: 'Session opened. Agent sees: Queue = <span class="tag queue">' + finalQueue + '</span>' + (skillExists ? ', Skill = <span class="tag skill">' + matchedSkill + '</span>' : '') + ', Survey = IssueCategory: ' + selectedCategory });
+    } else {
+      steps.push({ icon: '⏳', label: 'Agent Workspace', text: 'Waiting for agent to become available...' });
+    }
+
+    // Render
+    let html = '<div class="result-panel"><h2>Why This Routed Here</h2>';
+    steps.forEach(function(s) {
+      html += '<div class="step"><span class="step-icon">' + s.icon + '</span><div class="step-text"><span class="step-label">' + s.label + ':</span> ' + s.text + '</div></div>';
+    });
+    html += '</div>';
+    document.getElementById('result-container').innerHTML = html;
+
+    // Animate pipeline
+    animatePipeline(['channel', 'workstream', 'classification', 'routing', 'assignment', 'workspace']);
+  });
+
+  // Reset
+  document.getElementById('reset-btn').addEventListener('click', function() {
+    selectedCategory = null;
+    document.querySelectorAll('#issue-category-group .toggle-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.pipeline-stage').forEach(s => { s.classList.remove('active', 'passed'); });
+    document.getElementById('result-container').innerHTML =
+      '<p style="color:var(--muted);font-style:italic;">Select an Issue Category and click "Simulate Routing" to see the decision trace.</p>';
+    slider.value = 3;
+    capacity = 3;
+    capValue.textContent = '3';
+    capFill.style.width = '60%';
+    capFill.style.background = 'var(--success)';
+  });
+})();
+</script>
+
+</body>
+</html>
