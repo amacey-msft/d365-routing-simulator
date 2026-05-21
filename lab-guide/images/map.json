@@ -2,8 +2,15 @@
   {
     "step": "001",
     "filename": "step-001-open-copilot-service-admin.png",
-    "url": "https://org7ef5c70f.crm.dynamics.com/main.aspx?appid=c0e488c4-b846-ef11-a317-6045bda86808&pagetype=control&controlName=MscrmControls.ModernAdmin.OCAdminConfigurationControl&data=%7B%22settingType%22%3A%22csachome%22%7D",
+    "url": "https://orga5bae564.crm.dynamics.com/_common/error/errorhandler.aspx?BackUri=&ErrorCode=0x80040217&Parm0=%0d%0a%0d%0aError%20Details%3a%20App%20Module%3a%201870688f-653b-f111-83fa-6045bd023806_customerserviceadmincenter%20is%20invalid.&RequestUri=%2fmain.aspx%3fapp%3dcustomerserviceadmincenter&user_lcid=1033",
     "description": "Copilot Service admin center landing page",
-    "timestamp": "2026-03-17T20:32:13.797Z"
+    "timestamp": "2026-05-21T20:07:55.995Z"
+  },
+  {
+    "step": "002",
+    "filename": "step-002-unified-routing-enabled.png",
+    "url": "https://apps.powerapps.com/play/e/8247265b-b5f8-e149-9209-5a3455e1a81d/app/e51d627e-2b12-4c77-831d-1a38c521c9a7?tenantId=19e783ae-da17-4c69-8118-d15b80b10d3b&hint=9f3abcd1-a1fc-4c64-984b-6977507fceba&sourcetime=1779393470633&source=portal",
+    "description": "Unified Routing settings — verify enabled",
+    "timestamp": "2026-05-21T20:08:43.093Z"
   }
 ]
