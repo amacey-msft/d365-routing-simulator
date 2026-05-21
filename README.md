@@ -1,75 +1,40 @@
-# D365 Unified Routing & Agent Configuration Guide
+# D365 Contact Center Routing Simulator
 
-An interactive lab guide, Playwright automation harness, and web-based routing simulator for Dynamics 365 Contact Center Unified Routing.
+Test and demonstrate your Dynamics 365 Contact Center routing rules — without needing a live customer interaction.
 
-## What's in this repo
+This solution adds a simulator app to your D365 environment. You can set routing field values manually, fire them through your routing rules, and see exactly which queue an interaction would land in. Great for validating routing logic before go-live, or showing customers how their routing setup works.
 
-| Folder | Purpose |
-|---|---|
-| `/lab-guide/` | Step-by-step lab guide with annotated screenshots |
-| `/automation/` | Playwright tests that capture screenshots from a live Power Platform environment |
-| `/web-app/` | Static interactive web app explaining routing decisions |
-| `/diagrams/` | Mermaid diagrams of the routing pipeline |
-| `/infra/` | Bicep IaC for Azure App Service deployment |
-| `/notes/` | Decisions, assumptions, doc gaps & diffs |
-| `/references/` | Baseline lab guide source documents (not committed) |
-| `/.squad/` | Squad AI team state |
+## What You Get
 
-## Quick Start
+- **Routing simulator app** — set contact attributes and test which queue they route to
+- **Pre-built routing scenarios** — common patterns ready to run out of the box
+- **Custom scenario builder** — define your own scenarios for demos or testing
+- Runs natively inside your D365 environment — no external tools required
 
-### Prerequisites
-- Node.js ≥ 20
-- Docker Desktop (for local container run)
-- `gh` CLI authenticated (`gh auth login`)
-- `pac` CLI authenticated to your Power Platform environment
-- A Power Platform environment with Dynamics 365 Contact Center
+## Requirements
 
-### 1. Clone and install
-```bash
-git clone https://github.com/<owner>/D365RoutingGuide.git
-cd D365RoutingGuide
-cp .env.example .env   # fill in your environment details
-```
+- Dynamics 365 Contact Center with Unified Routing enabled
+- System Customizer role (or higher) in your environment
 
-### 2. Run Playwright automation (capture screenshots)
-```bash
-cd automation
-npm install
-npx playwright install chromium
-npx playwright test
-```
+## Install
 
-### 3. Run the web app locally
-```bash
-cd web-app
-# Option A: direct
-npx serve .
-# Option B: Docker
-docker compose up
-```
-Open http://localhost:3000
+### Step 1 — Download the solution
+Go to the [Releases](../../releases) page and download `D365RoutingSimulator_1_0_0_1.zip`.
 
-### 4. Deploy to Azure App Service
-See [/notes/azure-deploy.md](notes/azure-deploy.md) and [/infra/README.md](infra/README.md).
+### Step 2 — Import into your environment
+1. Go to [make.powerapps.com](https://make.powerapps.com) and select your environment
+2. Click **Solutions** → **Import solution**
+3. Upload the zip file and follow the wizard
+4. Choose **Unmanaged** when asked
 
-## Lab Flow (Canonical Sequence)
+### Step 3 — Open the simulator
+Once imported, find the **D365 Routing Simulator** app in your list of apps at [make.powerapps.com](https://make.powerapps.com) → **Apps**, or directly in your D365 environment app switcher.
 
-```
-Unified Routing enablement
-  → Chat workstream
-    → Pre-chat survey (IssueCategory)
-      → Skills definition
-        → Work classification ruleset (skill-based)
-          → Route-to-queue ruleset (skill match)
-            → Validate via chat widget + workspace
-```
+---
 
-See the full routing pipeline diagram: [/diagrams/unified-routing-flow.mmd](diagrams/unified-routing-flow.mmd)
+## For Developers
 
-## Contributing
+This repo also contains a Playwright automation harness, a web-based routing guide, and Bicep infrastructure templates for contributors and advanced scenarios. See [README-technical.md](README-technical.md) for full developer documentation.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+---
+*Built by Al Macey · May 2026*
