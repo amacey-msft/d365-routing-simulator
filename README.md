@@ -66,6 +66,14 @@ Unified Routing enablement
 
 See the full routing pipeline diagram: [/diagrams/unified-routing-flow.mmd](diagrams/unified-routing-flow.mmd)
 
+## Download / Install Solution
+
+The Power Platform unmanaged solution is available on the [Releases](../../releases) page.
+
+1. Download `D365RoutingSimulator_1_0_0_1.zip`
+2. In your Power Platform environment: **Solutions → Import Solution**
+3. Select **Unmanaged** and follow the wizard
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
