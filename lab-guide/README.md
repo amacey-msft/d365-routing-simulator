@@ -34,7 +34,7 @@ See the full Mermaid diagram: [../diagrams/unified-routing-flow.mmd](../diagrams
 - URL pattern: `https://<your-org>.crm.dynamics.com/main.aspx?app=customerserviceadmincenter`
 - Or: Power Apps → your environment → Customer Service admin center
 
-![Step 001](images/step-001-open-cs-admin-center.png)
+
 
 ### WHY THIS STEP EXISTS
 The Customer Service admin center is the single pane of glass for all Omnichannel and Unified Routing configuration. Without this, you cannot access workstreams, queues, skills, or routing rules.
@@ -52,7 +52,7 @@ The admin center is a model-driven app that reads and writes to Dataverse tables
 
 **Action**: In the admin center site map, navigate to **Routing** (or **Unified routing**). Verify that Unified Routing is enabled for your environment.
 
-![Step 002](images/step-002-unified-routing-enabled.png)
+
 
 ### WHY THIS STEP EXISTS
 Unified Routing is the engine that evaluates classification and routing rules. If it's not enabled, work items are routed using the legacy "push" mechanism, which doesn't support skills-based routing or ML-based classification.
@@ -75,7 +75,7 @@ This is a tenant/environment-level setting stored in `msdyn_omnichannelconfigura
 
 **Action**: In the site map, click **Workstreams** to view the list of existing workstreams.
 
-![Step 003](images/step-003-workstreams-list.png)
+
 
 ### WHY THIS STEP EXISTS
 A workstream is the entry point for work items from a specific channel. Every chat, email, or voice call enters the routing pipeline through a workstream. You need to create one for chat before configuring routing rules.
@@ -102,7 +102,7 @@ The workstream is the container that ties together the channel, the rules, and t
 - **Channel type**: Chat
 - **Work distribution mode**: Push (default)
 
-![Step 004](images/step-004-new-chat-workstream-dialog.png)
+
 
 ### WHY THIS STEP EXISTS
 Without a workstream, there is no pipeline for chat conversations to enter. The workstream creates the channel-to-routing bridge.
@@ -128,7 +128,7 @@ Chat Widget → Workstream → [Classification] → [Routing] → Queue → Agen
 
 **Action**: Enter the workstream name `Lab Chat Workstream` and confirm **Chat** as the channel type.
 
-![Step 005](images/step-005-workstream-name-channel.png)
+
 
 ### WHY THIS STEP EXISTS
 The name identifies this workstream in routing logs, supervisor dashboards, and analytics. The channel type determines which channel adapter processes incoming items.
@@ -150,7 +150,7 @@ Each channel type has a dedicated adapter that knows how to:
 
 **Action**: Click **Save** (or **Create**) to persist the workstream.
 
-![Step 006](images/step-006-workstream-saved.png)
+
 
 ### WHY THIS STEP EXISTS
 Until saved, the workstream exists only in the form's browser state. Saving writes it to Dataverse and makes it available for classification/routing rulesets.
@@ -171,7 +171,7 @@ On save:
 
 **Action**: In the workstream's **Chat widget** or **Channel** settings, find the **Pre-conversation survey** toggle and turn it **On**.
 
-![Step 007](images/step-007-prechat-survey-enabled.png)
+
 
 ### WHY THIS STEP EXISTS
 The pre-chat survey collects structured input from the customer (like issue category) **before** the conversation is created. This data becomes a context variable that classification rules can evaluate to set skills or priority.
@@ -201,7 +201,7 @@ Customer fills survey → Context variables set → Classification rules evaluat
 - **Question type**: Choice / Option set
 - **Options**: Billing, Hardware, Software, General
 
-![Step 008](images/step-008-prechat-issue-category-question.png)
+
 
 ### WHY THIS STEP EXISTS
 `IssueCategory` is the primary variable that classification rules will use to determine which skill to attach. Without it, the classification ruleset has nothing to evaluate.
@@ -227,7 +227,7 @@ This variable is stored on `msdyn_ocliveworkitemcontextitem` and is accessible t
 
 **Action**: In the admin center site map, click **User management** → **Skills** (or just **Skills** under routing).
 
-![Step 009](images/step-009-skills-list.png)
+
 
 ### WHY THIS STEP EXISTS
 Skills are the matching criteria between work items and agents. A work item tagged with "Billing" skill will only route to queues/agents that have the "Billing" skill. Without skills defined, you cannot do skills-based routing.
@@ -256,7 +256,7 @@ Skill "Billing" defined → Assigned to Agent A (proficiency: 8) → Work item c
 - **Name**: `Billing`
 - **Type**: Proficiency (or Boolean, depending on your scenario)
 
-![Step 010](images/step-010-new-skill-form.png)
+
 
 ### WHY THIS STEP EXISTS
 This creates the "Billing" skill that will be used in classification rules (to tag incoming billing requests) and in routing rules (to match to the billing queue).
@@ -277,7 +277,7 @@ A skill record (`msdyn_characteristicreqgroup` or `characteristic`) is created i
 
 **Action**: Fill in `Billing` as the skill name. Select the type. Click **Save**.
 
-![Step 011](images/step-011-skill-billing-configured.png)
+
 
 ### WHY THIS STEP EXISTS
 The skill must be saved to Dataverse before it can be referenced in classification rules, routing rules, or agent assignments.
@@ -298,7 +298,7 @@ On save, the skill becomes available system-wide. You can now:
 
 **Action**: If needed, repeat skill creation for `Hardware`, `Software`, or other categories matching your pre-chat survey options.
 
-![Step 012](images/step-012-skill-saved.png)
+
 
 ### WHY THIS STEP EXISTS
 Each IssueCategory option should have a corresponding skill so that classification rules can map category → skill → queue.
@@ -321,7 +321,7 @@ IssueCategory = Software  → Software skill   → General Queue (fallback)
 
 **Action**: Go back to **Workstreams** → click **Lab Chat Workstream** → scroll to the **Work classification** section (or tab).
 
-![Step 013](images/step-013-work-classification-section.png)
+
 
 ### WHY THIS STEP EXISTS
 Work classification rules are evaluated **before routing**. They read work item context (like IssueCategory from the pre-chat survey) and tag the work item with skills, priority, or other attributes.
@@ -351,7 +351,7 @@ Each ruleset can contain multiple rules. Rules are evaluated in order. Multiple 
 **Action**: In the Work classification section, click **Create rule** (or **+ New rule**). Enter:
 - **Rule name**: `Set Billing Skill`
 
-![Step 014](images/step-014-new-classification-rule.png)
+
 
 ### WHY THIS STEP EXISTS
 This rule will evaluate the `IssueCategory` context variable from the pre-chat survey and set the `Billing` skill on the work item when the customer selects "Billing".
@@ -375,7 +375,7 @@ The rule engine evaluates conditions at runtime using the work item's context va
 - **Condition**: Context variable `IssueCategory` **equals** `Billing`
 - **Action**: Set skill → `Billing` (proficiency: required or specific level)
 
-![Step 015](images/step-015-classification-rule-condition.png)
+
 
 ### WHY THIS STEP EXISTS
 This is the actual routing intelligence — the logic that translates customer input into routing attributes.
@@ -402,7 +402,7 @@ At runtime, when a customer selects "Billing" in the pre-chat survey:
 
 **Action**: Click **Save** to persist the classification rule.
 
-![Step 016](images/step-016-classification-rule-saved.png)
+
 
 ### WHY THIS STEP EXISTS
 The rule must be saved to become active. Unsaved rules don't participate in classification.
@@ -420,7 +420,7 @@ On save, the rule is stored in `msdyn_decisionruleset` / `msdyn_decisionrule` Da
 
 **Action**: Still in the workstream, scroll to (or click on) the **Route to queues** section.
 
-![Step 017](images/step-017-route-to-queue-section.png)
+
 
 ### WHY THIS STEP EXISTS
 After classification tags the work item with skills, route-to-queue rules determine **which queue** receives the work item. Without these rules, work items go to the default (fallback) queue.
@@ -449,7 +449,6 @@ Queue assignment is the critical routing decision — it determines which pool o
 **Action**: Click **Create rule** (or **+ New rule**). Enter:
 - **Rule name**: `Route Billing to Billing Queue`
 
-![Step 018](images/step-018-new-route-to-queue-rule.png)
 
 ### WHY THIS STEP EXISTS
 This rule creates the link between the "Billing" skill (set by classification) and the "Billing Queue" where billing-skilled agents work.
@@ -474,7 +473,7 @@ The queue must already exist (or be created inline if the UI supports it).
 - **Condition**: Skill → `Billing` matches or is present
 - **Queue**: Select the `Billing Queue` (create it if it doesn't exist)
 
-![Step 019](images/step-019-route-to-queue-conditions.png)
+
 
 ### WHY THIS STEP EXISTS
 The condition creates the logical gate: "If this work item has the Billing skill, send it to the Billing queue."
@@ -497,7 +496,7 @@ At runtime:
 
 **Action**: Click **Save**.
 
-![Step 020](images/step-020-route-to-queue-saved.png)
+
 
 ### WHY THIS STEP EXISTS
 Persists the routing rule so it's active for all future work items.
@@ -518,7 +517,7 @@ On save, the rule joins the active route-to-queue ruleset. For every new work it
 
 **Action**: Open a page with the chat widget embedded (your portal, test page, or the widget preview in admin center). Click the chat button.
 
-![Step 021](images/step-021-chat-widget-open.png)
+
 
 ### WHY THIS STEP EXISTS
 End-to-end validation proves that the entire routing pipeline works: survey → classification → routing → queue → agent.
@@ -540,7 +539,7 @@ When the customer clicks the chat button:
 
 **Action**: Select an IssueCategory (e.g., `Billing`) in the pre-chat survey and submit.
 
-![Step 022](images/step-022-prechat-survey-submitted.png)
+
 
 ### WHY THIS STEP EXISTS
 Submitting the survey sends the context variable to the workstream, triggering the classification → routing chain.
@@ -562,7 +561,7 @@ Submitting the survey sends the context variable to the workstream, triggering t
 
 **Action**: In a separate browser (logged in as an agent), open **Customer Service workspace**. When the work item notification appears, click **Accept**.
 
-![Step 023](images/step-023-agent-workspace-accept.png)
+
 
 ### WHY THIS STEP EXISTS
 This confirms that the assignment engine selected the correct agent (one with the Billing skill, in the Billing queue, with available capacity).
@@ -588,7 +587,7 @@ Assignment evaluation:
 - Skills: Billing
 - Survey answers: IssueCategory = Billing
 
-![Step 024](images/step-024-workspace-routing-context.png)
+
 
 ### WHY THIS STEP EXISTS
 This is the final proof that the entire pipeline worked correctly. The agent can see exactly how and why the conversation was routed to them.
